@@ -24,6 +24,9 @@ defmodule Taskman.MixProject do
     [
       {:plug, "~> 1.16.1"},
       {:plug_cowboy, "~> 2.7.2"},
+      {:ecto_sql, "~> 3.12"},
+      {:postgrex, "~> 0.19.3"},
+
       {:dialyxir, "~> 1.4.5", only: [:dev], runtime: false}
     ]
   end

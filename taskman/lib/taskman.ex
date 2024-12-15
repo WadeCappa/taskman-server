@@ -1,6 +1,7 @@
 defmodule Taskman do
   def start(_type, _args) do
     children = [
+      Taskman.Repo,
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Taskman.Endpoint,
