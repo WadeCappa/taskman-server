@@ -1,0 +1,19 @@
+services:
+  taskman:
+    build:
+      context: taskman
+    ports:
+      - "4001:4001"
+    depends_on:
+      - db
+  db:
+    build: db 
+    user: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=test_password
+    volumes: 
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
