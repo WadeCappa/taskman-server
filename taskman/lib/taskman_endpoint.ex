@@ -1,16 +1,13 @@
 defmodule Taskman.Endpoint do
   import Plug.Conn
-  import Ecto.Query, only: [from: 1]
+  import Ecto.Query
 
-  def init(options) do
-    options
-  end
+  use Plug.Router
 
-  def call(conn, _opts) do
-    match(conn.method, conn.path_info, conn)
-  end
+  plug :match
+  plug :dispatch
 
-  defp match("GET", ["show"], conn) do
+  get "show" do
     query = from Taskman.Tasks
     response = Taskman.Repo.all(query)
     |> Poison.encode
@@ -20,23 +17,16 @@ defmodule Taskman.Endpoint do
     end
   end
 
-  defp match("GET", ["describe"], conn) do
-    send_resp(conn, 200, "show all information about a task")
-  end
-
-  defp match("POST", ["add"], conn) do
+  post "add" do
     {:ok, data, _conn} = read_body(conn)
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
         {:ok, from_db} = task
-        |> IO.inspect()
         |> Taskman.Logic.task_from_request()
-        |> IO.inspect()
         |> Taskman.Repo.insert(returning: true)
         |> IO.inspect()
 
         response = Poison.encode(from_db)
-        |> IO.inspect()
         case response do
           {:ok, resp} -> send_resp(conn, 200, resp)
           _ -> send_resp(conn, 500, "some error")
@@ -47,23 +37,27 @@ defmodule Taskman.Endpoint do
     end
   end
 
-  defp match("PUT", ["delete"], conn) do
-    send_resp(conn, 200, "delete task")
+  put "delete/:task_id" do
+    deleted = from(t in Taskman.Tasks, where: t.id == ^task_id)
+    |> Taskman.Repo.delete_all()
+    |> IO.inspect()
+
+    send_resp(conn, 200, "{}")
   end
 
-  defp match("PUT", ["complete"], conn) do
-    send_resp(conn, 200, "complete task")
+  put "complete/:task_id" do
+    send_resp(conn, 200, "complete task #{task_id}")
   end
 
-  defp match("PUT", ["triage"], conn) do
-    send_resp(conn, 200, "triage task")
+  put "triage/:task_id" do
+    send_resp(conn, 200, "triage task #{task_id}")
   end
 
-  defp match("PUT", ["promote"], conn) do
-    send_resp(conn, 200, "promote triaged task to task list")
+  put "promote/:task_id" do
+    send_resp(conn, 200, "promote triaged task to task list #{task_id}")
   end
 
-  defp match(_, _, conn) do
-    send_resp(conn, 404, "not found")
+  match _ do
+    send_resp(conn, 404, "bad path")
   end
 end
