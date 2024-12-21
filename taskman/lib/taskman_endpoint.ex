@@ -8,7 +8,7 @@ defmodule Taskman.Endpoint do
   plug :dispatch
 
   get "show/:status" do
-    case Taskman.Status.to_number(status) do
+    case Taskman.Status.to_number_from_string(status) do
       :error -> send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
       {:ok, status_id} ->
         query = from t in Taskman.Tasks, where: t.status == ^status_id
@@ -21,7 +21,7 @@ defmodule Taskman.Endpoint do
     end
   end
 
-  post "add" do
+  post "new" do
     {:ok, data, _conn} = read_body(conn)
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
@@ -49,16 +49,13 @@ defmodule Taskman.Endpoint do
     send_resp(conn, 200, "{}")
   end
 
-  put "complete/:task_id" do
-    send_resp(conn, 200, "complete task #{task_id}")
-  end
-
-  put "triage/:task_id" do
-    send_resp(conn, 200, "triage task #{task_id}")
-  end
-
-  put "promote/:task_id" do
-    send_resp(conn, 200, "promote triaged task to task list #{task_id}")
+  put "set/:task_id/:status" do
+    case Taskman.Status.to_number_from_string(status) do
+      :error -> send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
+      {:ok, status_id} ->
+        Taskman.Logic.set_status(task_id, status_id)
+        send_resp(conn, 200, "{}")
+    end
   end
 
   match _ do
