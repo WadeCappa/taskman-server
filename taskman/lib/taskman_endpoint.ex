@@ -1,5 +1,6 @@
 defmodule Taskman.Endpoint do
   import Plug.Conn
+  import Ecto.Query, only: [from: 1]
 
   def init(options) do
     options
@@ -10,11 +11,9 @@ defmodule Taskman.Endpoint do
   end
 
   defp match("GET", ["show"], conn) do
-    import Ecto.Query, only: [from: 1]
     query = from Taskman.Tasks
     response = Taskman.Repo.all(query)
     |> Poison.encode
-    |> IO.inspect()
     case response do
       {:ok, resp} -> send_resp(conn, 200, resp)
       _ -> send_resp(conn, 500, "some error")
@@ -26,8 +25,26 @@ defmodule Taskman.Endpoint do
   end
 
   defp match("POST", ["add"], conn) do
-    {:ok, data, _conn} = read_body(conn) |> IO.inspect()
-    send_resp(conn, 200, "add new task")
+    {:ok, data, _conn} = read_body(conn)
+    case Poison.decode(data, as: %Taskman.Tasks{}) do
+      {:ok, task} ->
+        {:ok, from_db} = task
+        |> IO.inspect()
+        |> Taskman.Logic.task_from_request()
+        |> IO.inspect()
+        |> Taskman.Repo.insert(returning: true)
+        |> IO.inspect()
+
+        response = Poison.encode(from_db)
+        |> IO.inspect()
+        case response do
+          {:ok, resp} -> send_resp(conn, 200, resp)
+          _ -> send_resp(conn, 500, "some error")
+        end
+      error ->
+        error |> IO.inspect()
+        send_resp(conn, 500, "malformed request")
+    end
   end
 
   defp match("PUT", ["delete"], conn) do

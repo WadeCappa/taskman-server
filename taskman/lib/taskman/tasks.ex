@@ -1,7 +1,7 @@
 defmodule Taskman.Tasks do
   use Ecto.Schema
 
-  @derive {Poison.Encoder, only: [:foo, :bar, :baz]}
+  @derive {Poison.Encoder, only: [:name, :cost, :priority]}
   schema "tasks" do
     field :name, :string
     field :cost, :integer
