@@ -8,7 +8,7 @@ defmodule Taskman.Logic do
     }}
   end
 
-  defp get_required_fields(malformed_request) do
+  defp get_required_fields(_malformed_request) do
     {:error, "missing required feilds!"}
   end
 

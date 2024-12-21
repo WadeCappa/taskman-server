@@ -7,8 +7,9 @@ defmodule Taskman.Endpoint do
   plug :match
   plug :dispatch
 
-  get "show" do
-    query = from Taskman.Tasks
+  get "show/:status" do
+    status_id = Taskman.Status.to_number(status)
+    query = from t in Taskman.Tasks, where: t.status == ^status_id
     response = Taskman.Repo.all(query)
     |> Poison.encode
     case response do
@@ -38,7 +39,7 @@ defmodule Taskman.Endpoint do
   end
 
   put "delete/:task_id" do
-    deleted = from(t in Taskman.Tasks, where: t.id == ^task_id)
+    from(t in Taskman.Tasks, where: t.id == ^task_id)
     |> Taskman.Repo.delete_all()
     |> IO.inspect()
 
