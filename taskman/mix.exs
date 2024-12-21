@@ -15,7 +15,7 @@ defmodule Taskman.MixProject do
   def application do
     [
       extra_applications: [:logger, :plug_cowboy],
-      mod: {Taskman, []}
+      mod: {Taskman.Application, []}
     ]
   end
 
@@ -26,6 +26,7 @@ defmodule Taskman.MixProject do
       {:plug_cowboy, "~> 2.7.2"},
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19.3"},
+      {:poison, "~> 3.1.0"},
 
       {:dialyxir, "~> 1.4.5", only: [:dev], runtime: false}
     ]

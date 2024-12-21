@@ -10,7 +10,15 @@ defmodule Taskman.Endpoint do
   end
 
   defp match("GET", ["show"], conn) do
-    send_resp(conn, 200, "show all tasks")
+    import Ecto.Query, only: [from: 1]
+    query = from Taskman.Tasks
+    response = Taskman.Repo.all(query)
+    |> Poison.encode
+    |> IO.inspect()
+    case response do
+      {:ok, resp} -> send_resp(conn, 200, resp)
+      _ -> send_resp(conn, 500, "some error")
+    end
   end
 
   defp match("GET", ["describe"], conn) do
@@ -18,6 +26,7 @@ defmodule Taskman.Endpoint do
   end
 
   defp match("POST", ["add"], conn) do
+    {:ok, data, _conn} = read_body(conn) |> IO.inspect()
     send_resp(conn, 200, "add new task")
   end
 

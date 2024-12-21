@@ -1,4 +1,4 @@
-defmodule Taskman do
+defmodule Taskman.Application do
   def start(_type, _args) do
     children = [
       Taskman.Repo,
