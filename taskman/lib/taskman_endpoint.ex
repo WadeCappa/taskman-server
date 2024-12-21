@@ -8,13 +8,16 @@ defmodule Taskman.Endpoint do
   plug :dispatch
 
   get "show/:status" do
-    status_id = Taskman.Status.to_number(status)
-    query = from t in Taskman.Tasks, where: t.status == ^status_id
-    response = Taskman.Repo.all(query)
-    |> Poison.encode
-    case response do
-      {:ok, resp} -> send_resp(conn, 200, resp)
-      _ -> send_resp(conn, 500, "some error")
+    case Taskman.Status.to_number(status) do
+      :error -> send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
+      {:ok, status_id} ->
+        query = from t in Taskman.Tasks, where: t.status == ^status_id
+        response = Taskman.Repo.all(query)
+        |> Poison.encode
+        case response do
+          {:ok, resp} -> send_resp(conn, 200, resp)
+          _ -> send_resp(conn, 500, "some error")
+        end
     end
   end
 
