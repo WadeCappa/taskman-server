@@ -59,6 +59,6 @@ defmodule Taskman.Endpoint do
   end
 
   match _ do
-    send_resp(conn, 404, "bad path")
+    send_resp(conn, 404, "{}")
   end
 end

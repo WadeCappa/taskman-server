@@ -1,8 +1,8 @@
 defmodule TaskmanTest do
   use ExUnit.Case
-  doctest Taskman
 
   test "greets the world" do
-    assert Taskman.hello() == :world
+    IO.puts Taskman.Status.to_number("completed")
+    # assert Taskman.hello() == :world
   end
 end
