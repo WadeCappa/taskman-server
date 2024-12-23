@@ -1,4 +1,3 @@
-
 defmodule Authman.Users do
   use Ecto.Schema
 

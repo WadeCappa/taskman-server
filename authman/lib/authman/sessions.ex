@@ -1,4 +1,3 @@
-
 defmodule Authman.Sessions do
   use Ecto.Schema
 
