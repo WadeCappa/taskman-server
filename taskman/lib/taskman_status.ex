@@ -1,5 +1,4 @@
 defmodule Taskman.Status do
-
   @type status :: :tracking | :completed | :triaged
 
   @spec get_statuses() :: %{status() => integer()}
@@ -7,7 +6,7 @@ defmodule Taskman.Status do
     %{
       tracking: 0,
       completed: 1,
-      triaged: 2,
+      triaged: 2
     }
   end
 
