@@ -27,4 +27,21 @@ defmodule Taskman.Logic do
     from(t in Taskman.Tasks, where: t.id == ^task_id, update: [set: [status: ^status]])
     |> Taskman.Repo.update_all([])
   end
+
+  def get_tasks(status_id) do
+    from(t in Taskman.Tasks, where: t.status == ^status_id)
+    |> Taskman.Repo.all()
+  end
+
+  def delete_task_by_id(task_id) do
+    from(t in Taskman.Tasks, where: t.id == ^task_id)
+    |> Taskman.Repo.delete_all()
+    |> IO.inspect()
+  end
+
+  def insert_task(new_task) do
+    new_task
+    |> task_from_request()
+    |> Taskman.Repo.insert(returning: true)
+  end
 end

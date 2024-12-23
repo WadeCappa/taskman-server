@@ -1,6 +1,5 @@
 defmodule Taskman.Endpoint do
   import Plug.Conn
-  import Ecto.Query
 
   use Plug.Router
 
@@ -11,8 +10,7 @@ defmodule Taskman.Endpoint do
     case Taskman.Status.to_number_from_string(status) do
       :error -> send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
       {:ok, status_id} ->
-        query = from t in Taskman.Tasks, where: t.status == ^status_id
-        response = Taskman.Repo.all(query)
+        response = Taskman.Logic.get_tasks(status_id)
         |> Poison.encode
         case response do
           {:ok, resp} -> send_resp(conn, 200, resp)
@@ -26,9 +24,7 @@ defmodule Taskman.Endpoint do
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
         {:ok, from_db} = task
-        |> Taskman.Logic.task_from_request()
-        |> Taskman.Repo.insert(returning: true)
-        |> IO.inspect()
+        |> Taskman.Logic.insert_task()
 
         response = Poison.encode(from_db)
         case response do
@@ -42,10 +38,7 @@ defmodule Taskman.Endpoint do
   end
 
   put "delete/:task_id" do
-    from(t in Taskman.Tasks, where: t.id == ^task_id)
-    |> Taskman.Repo.delete_all()
-    |> IO.inspect()
-
+    Taskman.Logic.delete_task_by_id(task_id)
     send_resp(conn, 200, "{}")
   end
 

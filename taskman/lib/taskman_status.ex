@@ -8,12 +8,7 @@ defmodule Taskman.Status do
       tracking: 0,
       completed: 1,
       triaged: 2,
-    } |> IO.inspect()
-  end
-
-  @spec to_number(status()) :: integer()
-  def to_number(status) do
-    Map.get(get_statuses(), String.to_atom(status))
+    }
   end
 
   @spec to_number_from_string(String.t()) :: integer()
