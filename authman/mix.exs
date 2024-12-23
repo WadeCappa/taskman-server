@@ -1,9 +1,9 @@
-defmodule Taskman.MixProject do
+defmodule Authman.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :taskman,
+      app: :authman,
       version: "0.1.0",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule Taskman.MixProject do
   def application do
     [
       extra_applications: [:logger, :plug_cowboy],
-      mod: {Taskman.Application, []}
+      mod: {Authman.Application, []}
     ]
   end
 
@@ -27,7 +27,7 @@ defmodule Taskman.MixProject do
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19.3"},
       {:poison, "~> 3.1.0"},
-      {:dialyxir, "~> 1.4.5", only: [:dev], runtime: false}
+      {:bcrypt_elixir, "~> 3.2.0"}
     ]
   end
 end

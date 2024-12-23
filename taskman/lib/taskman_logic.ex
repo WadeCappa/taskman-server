@@ -2,11 +2,12 @@ defmodule Taskman.Logic do
   import Ecto.Query
 
   defp get_required_fields(%{name: name, cost: cost, priority: priority}) do
-    {:ok, %Taskman.Tasks{
-      name: name,
-      cost: cost,
-      priority: priority
-    }}
+    {:ok,
+     %Taskman.Tasks{
+       name: name,
+       cost: cost,
+       priority: priority
+     }}
   end
 
   defp get_required_fields(_malformed_request) do
@@ -19,7 +20,9 @@ defmodule Taskman.Logic do
         new_task
         |> Map.put(:time_posted, System.os_time())
         |> Map.put(:status, 0)
-      error -> error
+
+      error ->
+        error
     end
   end
 
