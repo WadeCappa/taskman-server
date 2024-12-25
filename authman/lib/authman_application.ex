@@ -5,7 +5,7 @@ defmodule Authman.Application do
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Authman.Endpoint,
-        options: [port: 4001]
+        options: [port: 4002]
       )
     ]
 

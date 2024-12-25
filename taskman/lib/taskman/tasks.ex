@@ -10,5 +10,6 @@ defmodule Taskman.Tasks do
     field(:time_posted, :integer)
     field(:status, :integer)
     field(:deadline, :integer)
+    field(:user_id, :integer)
   end
 end

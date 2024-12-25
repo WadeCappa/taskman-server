@@ -4,6 +4,7 @@ defmodule Taskman.Endpoint do
   use Plug.Router
 
   plug(:match)
+  plug(Taskman.Auth)
   plug(:dispatch)
 
   get "show/:status" do
@@ -13,7 +14,7 @@ defmodule Taskman.Endpoint do
 
       {:ok, status_id} ->
         response =
-          Taskman.Logic.get_tasks(status_id)
+          Taskman.Logic.get_tasks(status_id, conn.assigns[:user_id])
           |> Poison.encode()
 
         case response do
@@ -24,13 +25,12 @@ defmodule Taskman.Endpoint do
   end
 
   post "new" do
-    {:ok, data, _conn} = read_body(conn)
-
+    {:ok, data, conn} = read_body(conn)
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
         {:ok, from_db} =
           task
-          |> Taskman.Logic.insert_task()
+          |> Taskman.Logic.insert_task(conn.assigns[:user_id])
 
         response = Poison.encode(from_db)
 
@@ -46,7 +46,7 @@ defmodule Taskman.Endpoint do
   end
 
   put "delete/:task_id" do
-    Taskman.Logic.delete_task_by_id(task_id)
+    Taskman.Logic.delete_task_by_id(task_id, conn.assigns[:user_id])
     send_resp(conn, 200, "{}")
   end
 
@@ -56,7 +56,7 @@ defmodule Taskman.Endpoint do
         send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
 
       {:ok, status_id} ->
-        Taskman.Logic.set_status(task_id, status_id)
+        Taskman.Logic.set_status(task_id, status_id, conn.assigns[:user_id])
         send_resp(conn, 200, "{}")
     end
   end

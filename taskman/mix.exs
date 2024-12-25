@@ -27,6 +27,7 @@ defmodule Taskman.MixProject do
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19.3"},
       {:poison, "~> 3.1.0"},
+      {:httpoison, "~> 2.2.1"},
       {:dialyxir, "~> 1.4.5", only: [:dev], runtime: false}
     ]
   end

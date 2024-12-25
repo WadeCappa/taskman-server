@@ -7,21 +7,18 @@ defmodule Authman.Endpoint do
   plug(:dispatch)
 
   put "check" do
-    {:ok, data, _conn} = read_body(conn)
-
-    case Poison.decode(data, %{keys: :atoms}) do
-      {:ok, %{token: token}} ->
+    {:ok, _data, conn} = read_body(conn)
+    %{req_headers: headers} = conn
+    case Authman.Session.Logic.extract_auth(headers) do
+      {:ok, token} ->
         case Authman.Session.Logic.check(token) do
           {:ok, user_id} ->
             send_resp(conn, 200, "{\"user_id\": #{user_id}}")
-
           error ->
             error |> IO.inspect()
             send_resp(conn, 400, "{}")
         end
-
-      error ->
-        error |> IO.inspect()
+      :error ->
         send_resp(conn, 400, "{}")
     end
   end
