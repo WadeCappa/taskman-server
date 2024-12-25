@@ -6,4 +6,4 @@ config :authman, Authman.Repo,
   database: "authman_repo",
   username: "postgres",
   password: "pass",
-  hostname: "localhost"
+  hostname: "db"
