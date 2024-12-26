@@ -22,8 +22,7 @@ defmodule Taskman.Logic do
         |> Map.put(:status, 0)
         |> Map.put(:user_id, user_id)
 
-      error ->
-        error
+      error -> error
     end
   end
 
