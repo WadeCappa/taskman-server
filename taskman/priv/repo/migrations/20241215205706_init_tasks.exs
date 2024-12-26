@@ -9,10 +9,11 @@ defmodule Taskman.Repo.Migrations.InitTasks do
       add :priority, :bigint, null: false
       add :time_posted, :bigint, null: false
       add :status, :bigint, null: false
+      add :user_id, :bigint, null: false
 
       add :deadline, :bigint, null: true
       add :description, :text, null: true
     end
-    create index(:tasks, [:status])
+    create index(:tasks, [:user_id, :status])
   end
 end

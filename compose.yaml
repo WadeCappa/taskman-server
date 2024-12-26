@@ -7,6 +7,14 @@ services:
     depends_on:
       db:
         condition: service_healthy  
+  authman:
+    build:
+      context: authman 
+    ports:
+      - "4002:4002"
+    depends_on:
+      db:
+        condition: service_healthy  
   db:
     image: postgres:latest
     restart: always
