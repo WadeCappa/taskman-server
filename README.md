@@ -3,3 +3,9 @@
 - [ ] frontend that works for phone too
     - [ ] build cli for frontend?
 - [ ] validate email addresses on account creation
+- [ ] make GET at "/" return an html describing how to use the api
+- [ ] setup telemetry
+- [ ] setup reverse proxy 
+- [ ] make sure auth tokens expire
+- [ ] setup telemetry
+- [ ] sort by cost/priority, same algo as taskman-cli
