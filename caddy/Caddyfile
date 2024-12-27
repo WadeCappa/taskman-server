@@ -1,0 +1,7 @@
+cantseewater.online {
+	reverse_proxy taskman:4001
+}
+
+auth.cantseewater.online {
+	reverse_proxy authman:4002
+}
