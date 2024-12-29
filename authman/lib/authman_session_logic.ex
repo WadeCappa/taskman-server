@@ -2,7 +2,7 @@ defmodule Authman.Session.Logic do
   import Ecto.Query
 
   defp has_expired(session) do
-    session.expire_time > System.os_time()
+    session.expire_time > System.os_time(:second)
   end
 
   def extract_auth(headers) do
