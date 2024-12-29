@@ -15,6 +15,7 @@ defmodule Taskman.Endpoint do
       {:ok, status_id} ->
         response =
           Taskman.Logic.get_tasks(status_id, conn.assigns[:user_id])
+          |> Taskman.Logic.sort_tasks()
           |> Poison.encode()
 
         case response do
