@@ -9,6 +9,6 @@ read cost
 echo "priority"
 read priority
 
-source ~/Projects/taskman-server/commands/config
+source /etc/opt/taskman/config
 
 curl -X 'POST' "$TASKURL/new" -H "Authorization: Bearer $TOKEN" --data "{\"name\":\"$name\", \"cost\":$cost, \"priority\":$priority}" 
