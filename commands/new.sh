@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source /etc/opt/taskman/config
+
 echo "name"
 read name 
 
@@ -8,7 +10,5 @@ read cost
 
 echo "priority"
 read priority
-
-source /etc/opt/taskman/config
 
 curl -X 'POST' "$TASKURL/new" -H "Authorization: Bearer $TOKEN" --data "{\"name\":\"$name\", \"cost\":$cost, \"priority\":$priority}" 
