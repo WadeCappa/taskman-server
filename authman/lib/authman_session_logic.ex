@@ -12,7 +12,6 @@ defmodule Authman.Session.Logic do
     bearer_substring = "Bearer "
 
     header = headers
-    |> IO.inspect()
     |> Enum.filter(fn {key, _value} -> key == "authorization" end)
     |> Enum.filter(fn {_key, value} -> String.starts_with?(value, bearer_substring) end)
     |> Enum.map(fn {_key, value} -> String.replace_prefix(value, bearer_substring, "") end)

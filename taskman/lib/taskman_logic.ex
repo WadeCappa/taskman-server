@@ -34,14 +34,33 @@ defmodule Taskman.Logic do
     |> Taskman.Repo.update_all([])
   end
 
-  def get_tasks(status_id, user_id) do
-    from(t in Taskman.Tasks, where: t.status == ^status_id and t.user_id == ^user_id)
+  defp get_comments(task_id) do
+    from(c in Taskman.Comments, where: c.task_id == ^task_id)
     |> Taskman.Repo.all()
   end
 
+  def get_tasks(status_id, user_id) do
+    # select * from tasks left join comments on tasks.id = comments.task_id;
+    # TODO: get this to work with ecto
+    from(
+      t in Taskman.Tasks,
+      where: t.status == ^status_id and t.user_id == ^user_id)
+    |> Taskman.Repo.all()
+    |> Enum.map(fn t ->
+      # very expensive because we're not using a join.
+      Map.put(t, :comments, get_comments(t.id))
+    end)
+  end
+
   def get_task_by_id(task_id, user_id) do
-    from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
+    task = from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
     |> Taskman.Repo.one()
+
+    if task == nil do
+      nil
+    else
+      Map.put(task, :comments, get_comments(task.id))
+    end
   end
 
   def delete_task_by_id(task_id, user_id) do
@@ -58,7 +77,6 @@ defmodule Taskman.Logic do
   def sort_tasks(tasks) do
     total_priority = tasks
     |> Enum.reduce(1, fn task, p -> p + task.priority end)
-    |> IO.inspect()
 
     get_score = fn task ->
       time_to_deadline_cost = if task.deadline == nil do
