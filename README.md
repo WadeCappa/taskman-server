@@ -13,3 +13,7 @@
 - [x] add notes for each task
 - [ ] add categories
 - [ ] metrics and telemetry
+- [ ] add dependencies
+- [ ] performance optimizations
+- [ ] general refactor for code quality
+- [ ] write tests

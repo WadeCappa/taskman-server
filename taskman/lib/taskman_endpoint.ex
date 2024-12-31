@@ -48,14 +48,14 @@ defmodule Taskman.Endpoint do
     end
   end
 
-  get "show/:status" do
+  defp show(conn, status, category) do
     case Taskman.Status.to_number_from_string(status) do
       :error ->
         send_resp(conn, 400, "bad status, try 'tracking', 'completed', and 'triaged'")
 
       {:ok, status_id} ->
         response =
-          Taskman.Logic.get_tasks(status_id, conn.assigns[:user_id])
+          Taskman.Logic.get_tasks(status_id, conn.assigns[:user_id], category)
           |> Taskman.Logic.sort_tasks()
           |> Poison.encode()
 
@@ -66,14 +66,23 @@ defmodule Taskman.Endpoint do
     end
   end
 
+  get "show/:status/:category" do
+    show(conn, status, category)
+  end
+
+  get "show/:status" do
+    show(conn, status, :all)
+  end
+
   post "new" do
     {:ok, data, conn} = read_body(conn)
 
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
+        category_ids = Map.get(task, "categories", [])
+
         {:ok, from_db} =
-          task
-          |> Taskman.Logic.insert_task(conn.assigns[:user_id])
+          Taskman.Logic.insert_task(task, conn.assigns[:user_id], category_ids)
 
         response = Poison.encode(from_db)
 
