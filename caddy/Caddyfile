@@ -1,4 +1,4 @@
-cantseewater.online {
+api.cantseewater.online {
 	reverse_proxy taskman:4001
 }
 
