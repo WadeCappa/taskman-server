@@ -9,7 +9,6 @@ defmodule Taskman.Endpoint do
 
   post "comment/:task_id" do
     {:ok, data, conn} = read_body(conn)
-    IO.inspect(data)
 
     case Poison.decode(data, as: %{}) do
       {:ok, content} ->
