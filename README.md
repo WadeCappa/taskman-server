@@ -6,3 +6,9 @@
 - [ ] validate security, check for sql injection and such
 - [ ] cache auth in taskman
 - [ ] validate email addresses on account creation
+- [ ] show top n on show
+- [x] add describe
+
+# todo V1
+- [ ] add categories
+- [ ] add notes for each task

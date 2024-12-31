@@ -7,6 +7,17 @@ defmodule Taskman.Endpoint do
   plug(Taskman.Auth)
   plug(:dispatch)
 
+  get "describe/:task_id" do
+    task = task_id
+    |> Taskman.Logic.get_task_by_id(conn.assigns[:user_id])
+    |> Poison.encode()
+
+    case task do
+      {:ok, resp} -> send_resp(conn, 200, resp)
+      _ -> send_resp(conn, 500, "some error")
+    end
+  end
+
   get "show/:status" do
     case Taskman.Status.to_number_from_string(status) do
       :error ->

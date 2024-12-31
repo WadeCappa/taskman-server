@@ -39,10 +39,14 @@ defmodule Taskman.Logic do
     |> Taskman.Repo.all()
   end
 
+  def get_task_by_id(task_id, user_id) do
+    from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
+    |> Taskman.Repo.one()
+  end
+
   def delete_task_by_id(task_id, user_id) do
     from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
     |> Taskman.Repo.delete_all()
-    |> IO.inspect()
   end
 
   def insert_task(new_task, user_id) do
