@@ -12,3 +12,4 @@
 # todo V1
 - [ ] add categories
 - [ ] add notes for each task
+- [ ] metrics and telemetry

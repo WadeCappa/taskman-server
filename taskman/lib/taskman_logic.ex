@@ -22,7 +22,8 @@ defmodule Taskman.Logic do
         |> Map.put(:status, 0)
         |> Map.put(:user_id, user_id)
 
-      error -> error
+      error ->
+        error
     end
   end
 
@@ -30,18 +31,42 @@ defmodule Taskman.Logic do
     from(
       t in Taskman.Tasks,
       where: t.id == ^task_id and t.user_id == ^user_id,
-      update: [set: [status: ^status]])
+      update: [set: [status: ^status]]
+    )
     |> Taskman.Repo.update_all([])
   end
 
-  def get_tasks(status_id, user_id) do
-    from(t in Taskman.Tasks, where: t.status == ^status_id and t.user_id == ^user_id)
+  defp get_comments(task_id) do
+    from(c in Taskman.Comments, where: c.task_id == ^task_id)
     |> Taskman.Repo.all()
+    |> Enum.sort(fn x, y -> x.time_posted_in_seconds < y.time_posted_in_seconds end)
+    |> Enum.reverse()
+  end
+
+  def get_tasks(status_id, user_id) do
+    # select * from tasks left join comments on tasks.id = comments.task_id;
+    # TODO: get this to work with ecto
+    from(
+      t in Taskman.Tasks,
+      where: t.status == ^status_id and t.user_id == ^user_id
+    )
+    |> Taskman.Repo.all()
+    |> Enum.map(fn t ->
+      # very expensive because we're not using a join.
+      Map.put(t, :comments, get_comments(t.id))
+    end)
   end
 
   def get_task_by_id(task_id, user_id) do
-    from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
-    |> Taskman.Repo.one()
+    task =
+      from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
+      |> Taskman.Repo.one()
+
+    if task == nil do
+      nil
+    else
+      Map.put(task, :comments, get_comments(task.id))
+    end
   end
 
   def delete_task_by_id(task_id, user_id) do
@@ -56,18 +81,21 @@ defmodule Taskman.Logic do
   end
 
   def sort_tasks(tasks) do
-    total_priority = tasks
-    |> Enum.reduce(1, fn task, p -> p + task.priority end)
-    |> IO.inspect()
+    total_priority =
+      tasks
+      |> Enum.reduce(1, fn task, p -> p + task.priority end)
 
     get_score = fn task ->
-      time_to_deadline_cost = if task.deadline == nil do
-        0
-      else
-        task.cost / max(task.deadline - System.os_time(:second), 1)
-      end
+      time_to_deadline_cost =
+        if task.deadline == nil do
+          0
+        else
+          task.cost / max(task.deadline - System.os_time(:second), 1)
+        end
 
-      normalized_priority_over_cost = :math.sqrt(:math.pow(task.priority, 2) / total_priority) / task.cost
+      normalized_priority_over_cost =
+        :math.sqrt(:math.pow(task.priority, 2) / total_priority) / task.cost
+
       time_to_deadline_cost + normalized_priority_over_cost
     end
 
@@ -75,5 +103,33 @@ defmodule Taskman.Logic do
     |> Enum.map(fn t -> Map.put(t, :score, get_score.(t)) end)
     |> Enum.sort(fn x, y -> x.score < y.score end)
     |> Enum.reverse()
+  end
+
+  def new_comment(content, task_id, user_id) do
+    case Integer.parse(task_id) do
+      {num, ""} ->
+        if content == :no_comment or get_task_by_id(num, user_id) == nil do
+          {:error,
+           %{
+             reason: "cannot find task with provided task and user ids",
+             user_id: user_id,
+             task_id: num
+           }}
+        else
+          %Taskman.Comments{
+            content: content,
+            task_id: num,
+            time_posted_in_seconds: System.os_time(:second)
+          }
+          |> Taskman.Repo.insert(returning: true)
+        end
+
+      _ ->
+        {:error,
+         %{
+           reason: "did not pass a valid task_id",
+           task_id: task_id
+         }}
+    end
   end
 end

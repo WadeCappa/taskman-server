@@ -11,12 +11,12 @@ defmodule Authman.Session.Logic do
     no_token_statement = "no token"
     bearer_substring = "Bearer "
 
-    header = headers
-    |> IO.inspect()
-    |> Enum.filter(fn {key, _value} -> key == "authorization" end)
-    |> Enum.filter(fn {_key, value} -> String.starts_with?(value, bearer_substring) end)
-    |> Enum.map(fn {_key, value} -> String.replace_prefix(value, bearer_substring, "") end)
-    |> Enum.reduce(no_token_statement, fn v, _acc -> v end)
+    header =
+      headers
+      |> Enum.filter(fn {key, _value} -> key == "authorization" end)
+      |> Enum.filter(fn {_key, value} -> String.starts_with?(value, bearer_substring) end)
+      |> Enum.map(fn {_key, value} -> String.replace_prefix(value, bearer_substring, "") end)
+      |> Enum.reduce(no_token_statement, fn v, _acc -> v end)
 
     case header do
       ^no_token_statement -> :error

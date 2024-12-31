@@ -7,21 +7,51 @@ defmodule Taskman.Endpoint do
   plug(Taskman.Auth)
   plug(:dispatch)
 
+  post "comment/:task_id" do
+    {:ok, data, conn} = read_body(conn)
+
+    case Poison.decode(data, as: %{}) do
+      {:ok, content} ->
+        case Taskman.Logic.new_comment(
+               Map.get(content, "content", :no_comment),
+               task_id,
+               conn.assigns[:user_id]
+             ) do
+          {:ok, new_comment} ->
+            response = Poison.encode(new_comment)
+
+            case response do
+              {:ok, resp} -> send_resp(conn, 200, resp)
+              _ -> send_resp(conn, 500, "{}")
+            end
+
+          error ->
+            IO.inspect(error)
+            send_resp(conn, 400, "{}")
+        end
+
+      error ->
+        error |> IO.inspect()
+        send_resp(conn, 500, "{}")
+    end
+  end
+
   get "describe/:task_id" do
-    task = task_id
-    |> Taskman.Logic.get_task_by_id(conn.assigns[:user_id])
-    |> Poison.encode()
+    task =
+      task_id
+      |> Taskman.Logic.get_task_by_id(conn.assigns[:user_id])
+      |> Poison.encode()
 
     case task do
       {:ok, resp} -> send_resp(conn, 200, resp)
-      _ -> send_resp(conn, 500, "some error")
+      _ -> send_resp(conn, 500, "{}")
     end
   end
 
   get "show/:status" do
     case Taskman.Status.to_number_from_string(status) do
       :error ->
-        send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
+        send_resp(conn, 400, "bad status, try 'tracking', 'completed', and 'triaged'")
 
       {:ok, status_id} ->
         response =
@@ -31,13 +61,14 @@ defmodule Taskman.Endpoint do
 
         case response do
           {:ok, resp} -> send_resp(conn, 200, resp)
-          _ -> send_resp(conn, 500, "some error")
+          _ -> send_resp(conn, 500, "{}")
         end
     end
   end
 
   post "new" do
     {:ok, data, conn} = read_body(conn)
+
     case Poison.decode(data, as: %Taskman.Tasks{}) do
       {:ok, task} ->
         {:ok, from_db} =
@@ -48,12 +79,12 @@ defmodule Taskman.Endpoint do
 
         case response do
           {:ok, resp} -> send_resp(conn, 200, resp)
-          _ -> send_resp(conn, 500, "some error")
+          _ -> send_resp(conn, 500, "{}")
         end
 
       error ->
         error |> IO.inspect()
-        send_resp(conn, 500, "malformed request")
+        send_resp(conn, 400, "{}")
     end
   end
 
@@ -65,7 +96,7 @@ defmodule Taskman.Endpoint do
   put "set/:task_id/:status" do
     case Taskman.Status.to_number_from_string(status) do
       :error ->
-        send_resp(conn, 500, "bad status, try 'tracking', 'completed', and 'triaged'")
+        send_resp(conn, 400, "bad status, try 'tracking', 'completed', and 'triaged'")
 
       {:ok, status_id} ->
         Taskman.Logic.set_status(task_id, status_id, conn.assigns[:user_id])
