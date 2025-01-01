@@ -20,7 +20,7 @@ defmodule Taskman.Auth do
         "{\"message\": \"Auth header not provided, user format 'Authorization: Bearer <token>'\"}"
       )
     else
-      {:ok, resp} = HTTPoison.put("localhost:4002/check", "", [header])
+      {:ok, resp} = HTTPoison.put("authman:4002/check", "", [header])
 
       if Integer.floor_div(Map.get(resp, :status_code, 500), 100) == 2 and
            Map.has_key?(resp, :body) do
