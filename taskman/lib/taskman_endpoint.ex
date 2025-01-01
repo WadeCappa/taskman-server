@@ -66,6 +66,7 @@ defmodule Taskman.Endpoint do
     end
   end
 
+  # TODO: Add support for either id or name for the category variable
   get "show/:status/:category" do
     show(conn, status, category)
   end

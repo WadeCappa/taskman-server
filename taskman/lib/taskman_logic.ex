@@ -43,6 +43,10 @@ defmodule Taskman.Logic do
     |> Enum.reverse()
   end
 
+  defp has_category(_, :none) do
+    false
+  end
+
   defp has_category(_, :all) do
     true
   end
@@ -51,16 +55,20 @@ defmodule Taskman.Logic do
     Enum.member?(t.categories, c_id)
   end
 
-  defp get_category_id(:all) do
+  defp get_category_id(:all, _usr_id) do
     :all
   end
 
-  defp get_category_id(name) do
-    category = from(c in Taskman.Categories, where: c.category_name == ^name)
+  # TODO: Should return a unique value. This is currently
+  #  not enforced at the db level
+  defp get_category_id(name, user_id) do
+    category = from(
+      c in Taskman.Categories,
+      where: c.category_name == ^name and c.user_id == ^user_id)
     |> Taskman.Repo.one()
 
     case category do
-      nil -> :all
+      nil -> :none
       cat -> cat.category_id
     end
   end
@@ -68,8 +76,8 @@ defmodule Taskman.Logic do
   defp get_categories(task_id) do
     from(
       c in Taskman.Categories,
-      join: t in Taskman.TasksToCategories, on: t.task_id == c.task_id,
-      where: c.task_id == ^task_id)
+      join: t in Taskman.TasksToCategories, on: t.category_id == c.category_id,
+      where: t.task_id == ^task_id)
     |> Taskman.Repo.all()
   end
 
@@ -77,15 +85,15 @@ defmodule Taskman.Logic do
     # select * from tasks left join comments on tasks.id = comments.task_id;
     # TODO: get this to work with ecto
     # TODO: these map calls are very expensive because we're not using joins
-    category_id = get_category_id(category)
+    category_id = get_category_id(category, user_id)
 
     from(
       t in Taskman.Tasks,
       where: t.status == ^status_id and t.user_id == ^user_id
     )
     |> Taskman.Repo.all()
-    |> Enum.map(fn t -> Map.put(t, :comments, get_categories(t.id)) end)
-    |> Enum.map(fn t -> Map.put(t, :categories, get_comments(t.id)) end)
+    |> Enum.map(fn t -> Map.put(t, :comments, get_comments(t.id)) end)
+    |> Enum.map(fn t -> Map.put(t, :categories, get_categories(t.id)) end)
     |> Enum.filter(fn t -> has_category(t, category_id) end)
   end
 
@@ -97,7 +105,9 @@ defmodule Taskman.Logic do
     if task == nil do
       nil
     else
-      Map.put(task, :comments, get_comments(task.id))
+      task
+      |> Map.put(:comments, get_comments(task.id))
+      |> Map.put(:categories, get_categories(task.id))
     end
   end
 

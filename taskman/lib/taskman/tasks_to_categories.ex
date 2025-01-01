@@ -3,7 +3,7 @@ defmodule Taskman.TasksToCategories do
 
   @primary_key false
   @derive {Poison.Encoder, only: [:relationship_id, :task_id, :category_id]}
-  schema "comments" do
+  schema "tasks_to_categories" do
     field(:relationship_id, :integer)
     field(:task_id, :integer)
     field(:category_id, :integer)
