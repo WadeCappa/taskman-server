@@ -122,18 +122,30 @@ defmodule Taskman.Logic do
   end
 
   defp insert_category_relations(task, category_ids, user_id) do
+    IO.inspect("gettings ids")
+
     user_category_ids =
       user_id
       |> get_categories_for_user()
       |> IO.inspect()
-      |> Enum.map(fn c -> c.category_id end)
+      |> Enum.map(fn c -> Map.get(c, "category_id", 0) end)
+      |> IO.inspect()
+
+    IO.inspect("finished getting ids")
 
     inserted_relations =
       category_ids
       |> IO.inspect()
       |> Enum.filter(fn c_id -> Enum.member?(user_category_ids, c_id) end)
       |> Enum.map(fn c_id -> %Taskman.TasksToCategories{task_id: task.id, category_id: c_id} end)
-      |> then(fn x -> Taskman.Repo.insert(x, returning: true) end)
+      |> IO.inspect()
+      |> then(fn x ->
+        if length(x) > 0 do
+          Taskman.Repo.insert(x, returning: true)
+        else
+          []
+        end
+      end)
 
     case inserted_relations do
       {:ok, relations} ->
@@ -204,6 +216,17 @@ defmodule Taskman.Logic do
            reason: "did not pass a valid task_id",
            task_id: task_id
          }}
+    end
+  end
+
+  def create_category(name, user_id) do
+    case get_category_id(name, user_id) do
+      :none ->
+        %Taskman.Categories{
+          category_name: name,
+          user_id: user_id}
+        |> Taskman.Repo.insert(returning: true)
+      _id -> {:error, %{reason: "category by this name already exists", user_id: user_id, category_name: name}}
     end
   end
 end

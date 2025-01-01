@@ -9,6 +9,9 @@
 - [ ] cache auth in taskman
 - [ ] validate email addresses on account creation
 - [ ] show top n on show
+- [ ] track when a task is completed, for record keeping
+- [ ] get rid of debug logs
+- [ ] refactor logic for updating stuff into different endpoint plugs
 
 # todo V1
 - [x] add notes for each task

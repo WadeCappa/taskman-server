@@ -7,6 +7,41 @@ defmodule Taskman.Endpoint do
   plug(Taskman.Auth)
   plug(:dispatch)
 
+  get "category" do
+    categories =
+      conn.assigns[:user_id]
+      |> Taskman.Logic.get_categories_for_user()
+      |> Poison.encode()
+
+    case categories do
+      {:ok, resp} -> send_resp(conn, 200, resp)
+      _ -> send_resp(conn, 500, "{}")
+    end
+  end
+
+  post "category" do
+    {:ok, data, conn} = read_body(conn)
+
+    case Poison.decode(data) do
+      {:ok, category_request} ->
+        name = Map.get(category_request, "name")
+
+        {:ok, from_db} =
+          Taskman.Logic.create_category(name, conn.assigns[:user_id])
+
+        response = Poison.encode(from_db)
+
+        case response do
+          {:ok, resp} -> send_resp(conn, 200, resp)
+          _ -> send_resp(conn, 500, "{}")
+        end
+
+      error ->
+        error |> IO.inspect()
+        send_resp(conn, 400, "{}")
+    end
+  end
+
   post "comment/:task_id" do
     {:ok, data, conn} = read_body(conn)
 
