@@ -15,7 +15,7 @@
 
 # todo V1
 - [x] add notes for each task
-- [ ] add categories
+- [x] add categories
 - [ ] metrics and telemetry
 - [ ] add dependency tracking
 - [ ] general refactor for code quality
