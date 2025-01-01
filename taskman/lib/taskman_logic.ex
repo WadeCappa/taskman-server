@@ -1,7 +1,7 @@
 defmodule Taskman.Logic do
   import Ecto.Query
 
-  defp get_required_fields(%{name: name, cost: cost, priority: priority}) do
+  defp get_required_fields(%{"name" => name, "cost" => cost, "priority" => priority}) do
     {:ok,
      %Taskman.Tasks{
        name: name,
@@ -52,7 +52,9 @@ defmodule Taskman.Logic do
   end
 
   defp has_category(t, c_id) do
-    Enum.member?(t.categories, c_id)
+    t.categories
+    |> Enum.map(fn c -> c.category_id end)
+    |> then(fn cat_ids -> Enum.member?(cat_ids, c_id) end)
   end
 
   defp get_category_id(:all, _usr_id) do
@@ -122,13 +124,14 @@ defmodule Taskman.Logic do
   end
 
   defp insert_category_relations(task, category_ids, user_id) do
+    IO.inspect(category_ids)
     IO.inspect("gettings ids")
 
     user_category_ids =
       user_id
       |> get_categories_for_user()
       |> IO.inspect()
-      |> Enum.map(fn c -> Map.get(c, "category_id", 0) end)
+      |> Enum.map(fn c -> c.category_id end)
       |> IO.inspect()
 
     IO.inspect("finished getting ids")
@@ -139,22 +142,17 @@ defmodule Taskman.Logic do
       |> Enum.filter(fn c_id -> Enum.member?(user_category_ids, c_id) end)
       |> Enum.map(fn c_id -> %Taskman.TasksToCategories{task_id: task.id, category_id: c_id} end)
       |> IO.inspect()
-      |> then(fn x ->
-        if length(x) > 0 do
-          Taskman.Repo.insert(x, returning: true)
-        else
-          []
+      # TODO: should do this in one insert operation, look up how to do this
+      |> Enum.map(fn x -> Taskman.Repo.insert(x, returning: true) end)
+      |> Enum.filter(fn x ->
+        case x do
+          {:ok, _} -> true
+          _error -> false
         end
       end)
+      |> Enum.map(fn {:ok, x} -> x end)
 
-    case inserted_relations do
-      {:ok, relations} ->
-        inserted_ids = Enum.map(relations, fn x -> x.category_id end)
-        Map.put(task, :categories, inserted_ids)
-
-      error ->
-        error
-    end
+    {:ok, Map.put(task, :categoryRelations, inserted_relations)}
   end
 
   def insert_task(new_task, user_id, category_ids) do

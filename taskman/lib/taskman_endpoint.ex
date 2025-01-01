@@ -113,7 +113,7 @@ defmodule Taskman.Endpoint do
   post "new" do
     {:ok, data, conn} = read_body(conn)
 
-    case Poison.decode(data, as: %Taskman.Tasks{}) do
+    case Poison.decode(data) do
       {:ok, task} ->
         category_ids = Map.get(task, "categories", [])
 
