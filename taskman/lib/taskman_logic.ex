@@ -125,13 +125,15 @@ defmodule Taskman.Logic do
     user_category_ids =
       user_id
       |> get_categories_for_user()
+      |> IO.inspect()
       |> Enum.map(fn c -> c.category_id end)
 
     inserted_relations =
       category_ids
+      |> IO.inspect()
       |> Enum.filter(fn c_id -> Enum.member?(user_category_ids, c_id) end)
       |> Enum.map(fn c_id -> %Taskman.TasksToCategories{task_id: task.id, category_id: c_id} end)
-      |> Taskman.Repo.insert(returning: true)
+      |> then(fn x -> Taskman.Repo.insert(x, returning: true) end)
 
     case inserted_relations do
       {:ok, relations} ->
