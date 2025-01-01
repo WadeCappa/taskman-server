@@ -12,8 +12,8 @@ defmodule Taskman.Tasks do
              :time_posted,
              :deadline,
              :status,
-             :user_id,
-             :comments
+             :comments,
+             :categories
            ]}
   schema "tasks" do
     field(:name, :string)

@@ -11,4 +11,7 @@ read cost
 echo "priority"
 read priority
 
-curl -X 'POST' "$TASKURL/new" -H "Authorization: Bearer $TOKEN" --data "{\"name\":\"$name\", \"cost\":$cost, \"priority\":$priority}" 
+echo "',' delimited categories ids (do not use category names for this)"
+read categories 
+
+curl -X 'POST' "$TASKURL/new" -H "Authorization: Bearer $TOKEN" --data "{\"name\":\"$name\", \"cost\":$cost, \"priority\":$priority, \"categories\": [$categories]}"

@@ -1,7 +1,7 @@
 defmodule Taskman.Logic do
   import Ecto.Query
 
-  defp get_required_fields(%{name: name, cost: cost, priority: priority}) do
+  defp get_required_fields(%{"name" => name, "cost" => cost, "priority" => priority}) do
     {:ok,
      %Taskman.Tasks{
        name: name,
@@ -43,18 +43,64 @@ defmodule Taskman.Logic do
     |> Enum.reverse()
   end
 
-  def get_tasks(status_id, user_id) do
+  defp has_category(_, :none) do
+    false
+  end
+
+  defp has_category(_, :all) do
+    true
+  end
+
+  defp has_category(t, c_id) do
+    t.categories
+    |> Enum.map(fn c -> c.category_id end)
+    |> then(fn cat_ids -> Enum.member?(cat_ids, c_id) end)
+  end
+
+  defp get_category_id(:all, _usr_id) do
+    :all
+  end
+
+  # TODO: Should return a unique value. This is currently
+  #  not enforced at the db level
+  defp get_category_id(name, user_id) do
+    category =
+      from(
+        c in Taskman.Categories,
+        where: c.category_name == ^name and c.user_id == ^user_id
+      )
+      |> Taskman.Repo.one()
+
+    case category do
+      nil -> :none
+      cat -> cat.category_id
+    end
+  end
+
+  defp get_categories(task_id) do
+    from(
+      c in Taskman.Categories,
+      join: t in Taskman.TasksToCategories,
+      on: t.category_id == c.category_id,
+      where: t.task_id == ^task_id
+    )
+    |> Taskman.Repo.all()
+  end
+
+  def get_tasks(status_id, user_id, category) do
     # select * from tasks left join comments on tasks.id = comments.task_id;
     # TODO: get this to work with ecto
+    # TODO: these map calls are very expensive because we're not using joins
+    category_id = get_category_id(category, user_id)
+
     from(
       t in Taskman.Tasks,
       where: t.status == ^status_id and t.user_id == ^user_id
     )
     |> Taskman.Repo.all()
-    |> Enum.map(fn t ->
-      # very expensive because we're not using a join.
-      Map.put(t, :comments, get_comments(t.id))
-    end)
+    |> Enum.map(fn t -> Map.put(t, :comments, get_comments(t.id)) end)
+    |> Enum.map(fn t -> Map.put(t, :categories, get_categories(t.id)) end)
+    |> Enum.filter(fn t -> has_category(t, category_id) end)
   end
 
   def get_task_by_id(task_id, user_id) do
@@ -65,7 +111,9 @@ defmodule Taskman.Logic do
     if task == nil do
       nil
     else
-      Map.put(task, :comments, get_comments(task.id))
+      task
+      |> Map.put(:comments, get_comments(task.id))
+      |> Map.put(:categories, get_categories(task.id))
     end
   end
 
@@ -74,10 +122,41 @@ defmodule Taskman.Logic do
     |> Taskman.Repo.delete_all()
   end
 
-  def insert_task(new_task, user_id) do
-    new_task
-    |> task_from_request(user_id)
-    |> Taskman.Repo.insert(returning: true)
+  def get_categories_for_user(user_id) do
+    from(c in Taskman.Categories, where: c.user_id == ^user_id)
+    |> Taskman.Repo.all()
+  end
+
+  defp insert_category_relations(task, category_ids, user_id) do
+    user_category_ids =
+      user_id
+      |> get_categories_for_user()
+      |> Enum.map(fn c -> c.category_id end)
+
+    inserted_relations =
+      category_ids
+      |> Enum.filter(fn c_id -> Enum.member?(user_category_ids, c_id) end)
+      |> Enum.map(fn c_id -> %Taskman.TasksToCategories{task_id: task.id, category_id: c_id} end)
+      # TODO: should do this in one insert operation, look up how to do this
+      |> Enum.map(fn x -> Taskman.Repo.insert(x, returning: true) end)
+      |> Enum.filter(fn x ->
+        case x do
+          {:ok, _} -> true
+          _error -> false
+        end
+      end)
+      |> Enum.map(fn {:ok, x} -> x end)
+
+    {:ok, Map.put(task, :categoryRelations, inserted_relations)}
+  end
+
+  def insert_task(new_task, user_id, category_ids) do
+    case new_task
+         |> task_from_request(user_id)
+         |> Taskman.Repo.insert(returning: true) do
+      {:ok, task} -> insert_category_relations(task, category_ids, user_id)
+      error -> error
+    end
   end
 
   def sort_tasks(tasks) do
@@ -130,6 +209,21 @@ defmodule Taskman.Logic do
            reason: "did not pass a valid task_id",
            task_id: task_id
          }}
+    end
+  end
+
+  def create_category(name, user_id) do
+    case get_category_id(name, user_id) do
+      :none ->
+        %Taskman.Categories{
+          category_name: name,
+          user_id: user_id
+        }
+        |> Taskman.Repo.insert(returning: true)
+
+      _id ->
+        {:error,
+         %{reason: "category by this name already exists", user_id: user_id, category_name: name}}
     end
   end
 end
