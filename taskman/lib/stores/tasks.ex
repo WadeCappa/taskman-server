@@ -76,10 +76,16 @@ defmodule Taskman.Stores.Tasks do
   end
 
   def set_status(task_id, status, user_id) do
+    time =
+      case Taskman.Logic.Status.get_name(status) do
+        :completed -> System.os_time(:second)
+        _other -> nil
+      end
+
     from(
       t in Taskman.Tasks,
       where: t.id == ^task_id and t.user_id == ^user_id,
-      update: [set: [status: ^status]]
+      update: [set: [status: ^status, time_completed: ^time]]
     )
     |> Taskman.Repo.update_all([])
   end

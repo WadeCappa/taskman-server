@@ -8,8 +8,8 @@ defmodule Taskman.Tasks do
              :cost,
              :priority,
              :score,
-             :description,
              :time_posted,
+             :time_completed,
              :deadline,
              :status,
              :comments,
@@ -19,7 +19,7 @@ defmodule Taskman.Tasks do
     field(:name, :string)
     field(:cost, :integer)
     field(:priority, :integer)
-    field(:description, :string)
+    field(:time_completed, :integer)
     field(:time_posted, :integer)
     field(:status, :integer)
     field(:deadline, :integer)

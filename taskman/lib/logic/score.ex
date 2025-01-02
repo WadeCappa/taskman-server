@@ -1,8 +1,16 @@
 defmodule Taskman.Logic.Score do
+  def sort_tasks(tasks, status) do
+    case status do
+      :tracking -> sort_and_calculate_score(tasks)
+      :triaged -> sort_and_calculate_score(tasks)
+      :completed -> sort_by_time_completed(tasks)
+    end
+  end
+
   # this is kinda slow too, lots of repeat calculations. Can probably be faster.
   #  Might be able to cache this or something too since this only changes when a
   #  new task is added, which should be relatively rare, more reads than writes.
-  def sort_tasks(tasks) do
+  defp sort_and_calculate_score(tasks) do
     total_priority =
       tasks
       |> Enum.reduce(1, fn task, p -> p + task.priority end)
@@ -24,6 +32,12 @@ defmodule Taskman.Logic.Score do
     tasks
     |> Enum.map(fn t -> Map.put(t, :score, get_score.(t)) end)
     |> Enum.sort(fn x, y -> x.score < y.score end)
+    |> Enum.reverse()
+  end
+
+  defp sort_by_time_completed(tasks) do
+    tasks
+    |> Enum.sort(fn x, y -> x.time_completed < y.time_completed end)
     |> Enum.reverse()
   end
 end

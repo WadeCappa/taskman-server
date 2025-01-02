@@ -4,7 +4,6 @@ defmodule Taskman.Test.Tasks do
     name: "test task",
     cost: 10,
     priority: 10,
-    description: "test description",
     time_posted: 10,
     status: 0,
     deadline: 100,
@@ -33,7 +32,6 @@ defmodule Taskman.Test.Tasks do
     assert a.name == b.name
     assert a.cost == b.cost
     assert a.priority == b.priority
-    assert a.description == b.description
     assert a.time_posted == b.time_posted
     assert a.status == b.status
     assert a.deadline == b.deadline
@@ -104,6 +102,18 @@ defmodule Taskman.Test.Tasks do
       [task] = Taskman.Stores.Tasks.get_tasks(s, @user_id, [])
       assert task.id == t_id
     end)
+  end
+
+  test "tasks should be timestamped when completed" do
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+    assert is_nil(task.time_completed)
+
+    {:ok, num} = Taskman.Logic.Status.to_number_from_string("completed")
+
+    {1, _resp} = Taskman.Stores.Tasks.set_status(task.id, num, @user_id)
+
+    {:ok, task} = Taskman.Stores.Tasks.get_task_by_id(task.id, @user_id)
+    assert not is_nil(task.time_completed)
   end
 
   test "get_tasks should filter by category" do

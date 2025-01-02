@@ -6,7 +6,6 @@ defmodule Taskman.Test.Comments do
     name: "test task",
     cost: 10,
     priority: 10,
-    description: "test description",
     time_posted: 10,
     status: 0,
     deadline: 100,
