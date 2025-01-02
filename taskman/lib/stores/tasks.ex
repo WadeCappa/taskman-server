@@ -1,5 +1,4 @@
 defmodule Taskman.Stores.Tasks do
-
   import Ecto.Query
 
   # this needs to get comments and categories in one query. We should not
@@ -13,9 +12,9 @@ defmodule Taskman.Stores.Tasks do
       {:not_found, %{reason: "could not find task", user_id: user_id, task_id: task_id}}
     else
       {:ok,
-        task
-        |> Map.put(:comments, Taskman.Stores.Comments.get_comments_for_task(task.id))
-        |> Map.put(:categories, Taskman.Stores.Categories.get_categories_for_task(task.id))}
+       task
+       |> Map.put(:comments, Taskman.Stores.Comments.get_comments_for_task(task.id))
+       |> Map.put(:categories, Taskman.Stores.Categories.get_categories_for_task(task.id))}
     end
   end
 
@@ -23,18 +22,23 @@ defmodule Taskman.Stores.Tasks do
   # TODO: get this to work with ecto
   # TODO: these map calls are very expensive because we're not using joins
   def get_tasks(status_id, user_id, category) do
-    category_id = case category do
-      :all -> :all
-      other -> Taskman.Stores.Categories.get_category_id(other, user_id)
-    end
+    category_id =
+      case category do
+        :all -> :all
+        other -> Taskman.Stores.Categories.get_category_id(other, user_id)
+      end
 
     from(
       t in Taskman.Tasks,
       where: t.status == ^status_id and t.user_id == ^user_id
     )
     |> Taskman.Repo.all()
-    |> Enum.map(fn t -> Map.put(t, :comments, Taskman.Stores.Comments.get_comments_for_task(t.id)) end)
-    |> Enum.map(fn t -> Map.put(t, :categories, Taskman.Stores.Categories.get_categories_for_task(t.id)) end)
+    |> Enum.map(fn t ->
+      Map.put(t, :comments, Taskman.Stores.Comments.get_comments_for_task(t.id))
+    end)
+    |> Enum.map(fn t ->
+      Map.put(t, :categories, Taskman.Stores.Categories.get_categories_for_task(t.id))
+    end)
     |> Enum.filter(fn t -> has_category(t, category_id) end)
     |> then(fn tasks -> sort_tasks(tasks) end)
   end
@@ -83,7 +87,7 @@ defmodule Taskman.Stores.Tasks do
 
   def insert_task(new_task, category_ids) do
     case new_task
-        |> Taskman.Repo.insert(returning: true) do
+         |> Taskman.Repo.insert(returning: true) do
       {:ok, task} -> insert_category_relations(task, category_ids)
       error -> error
     end
@@ -96,9 +100,11 @@ defmodule Taskman.Stores.Tasks do
       |> Enum.filter(fn c -> Enum.member?(category_ids, c.category_id) end)
 
     target_categories
-      |> Enum.map(fn c -> %Taskman.TasksToCategories{task_id: task.id, category_id: c.category_id} end)
-      # TODO: should do this in one insert operation, look up how to do this
-      |> Enum.each(fn x -> Taskman.Repo.insert(x, returning: true) end)
+    |> Enum.map(fn c ->
+      %Taskman.TasksToCategories{task_id: task.id, category_id: c.category_id}
+    end)
+    # TODO: should do this in one insert operation, look up how to do this
+    |> Enum.each(fn x -> Taskman.Repo.insert(x, returning: true) end)
 
     {:ok, Map.put(task, :categories, target_categories)}
   end
@@ -116,5 +122,4 @@ defmodule Taskman.Stores.Tasks do
     )
     |> Taskman.Repo.update_all([])
   end
-
 end

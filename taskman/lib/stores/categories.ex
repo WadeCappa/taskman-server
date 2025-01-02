@@ -1,5 +1,4 @@
 defmodule Taskman.Stores.Categories do
-
   import Ecto.Query
 
   def get_categories_for_task(task_id) do
@@ -28,7 +27,11 @@ defmodule Taskman.Stores.Categories do
 
       _ ->
         {:error,
-         %{reason: "category by this name already exists", user_id: user_id, category_name: category_name}}
+         %{
+           reason: "category by this name already exists",
+           user_id: user_id,
+           category_name: category_name
+         }}
     end
   end
 
@@ -43,9 +46,11 @@ defmodule Taskman.Stores.Categories do
       |> Taskman.Repo.one()
 
     case category do
-      nil -> {:not_found, %{reason: "could not find a category for this name", category_name: name}}
-      cat -> {:ok, cat.category_id}
+      nil ->
+        {:not_found, %{reason: "could not find a category for this name", category_name: name}}
+
+      cat ->
+        {:ok, cat.category_id}
     end
   end
-
 end

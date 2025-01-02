@@ -1,5 +1,4 @@
 defmodule Taskman.Endpoints.Tasks do
-
   import Plug.Conn
 
   def get_task(conn, task_id) do
@@ -64,7 +63,8 @@ defmodule Taskman.Endpoints.Tasks do
       {:ok, task} ->
         category_ids = Map.get(task, "categories", [])
 
-        {:ok, from_db} = task
+        {:ok, from_db} =
+          task
           |> task_from_request(conn.assigns[:user_id])
           |> Taskman.Stores.Tasks.insert_task(category_ids)
 
@@ -96,5 +96,4 @@ defmodule Taskman.Endpoints.Tasks do
         send_resp(conn, 200, "{}")
     end
   end
-
 end

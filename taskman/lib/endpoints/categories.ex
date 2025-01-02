@@ -1,5 +1,4 @@
 defmodule Taskman.Endpoints.Categories do
-
   import Plug.Conn
 
   def get_category(conn) do
@@ -36,5 +35,4 @@ defmodule Taskman.Endpoints.Categories do
         send_resp(conn, 400, "{}")
     end
   end
-
 end

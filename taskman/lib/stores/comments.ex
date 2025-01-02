@@ -1,5 +1,4 @@
 defmodule Taskman.Stores.Comments do
-
   import Ecto.Query
 
   def get_comments_for_task(task_id) do
@@ -13,6 +12,7 @@ defmodule Taskman.Stores.Comments do
     case Integer.parse(task_id) do
       {num, ""} ->
         {status, resp} = Taskman.Stores.Tasks.get_task_by_id(num, user_id)
+
         if comment_text == :no_comment or status != :ok do
           {:error,
            %{
@@ -37,5 +37,4 @@ defmodule Taskman.Stores.Comments do
          }}
     end
   end
-
 end

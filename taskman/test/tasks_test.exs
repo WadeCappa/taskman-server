@@ -1,4 +1,3 @@
-
 defmodule Taskman.Test.Tasks do
   @test_task %Taskman.Tasks{
     name: "test task",
@@ -40,9 +39,17 @@ defmodule Taskman.Test.Tasks do
   end
 
   test "store task with categories" do
-    {:ok, category_1} = Taskman.Stores.Categories.try_create_category(@test_category_name_1, @test_task.user_id)
-    {:ok, category_2} = Taskman.Stores.Categories.try_create_category(@test_category_name_2, @test_task.user_id)
-    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [category_1.category_id, category_2.category_id])
+    {:ok, category_1} =
+      Taskman.Stores.Categories.try_create_category(@test_category_name_1, @test_task.user_id)
+
+    {:ok, category_2} =
+      Taskman.Stores.Categories.try_create_category(@test_category_name_2, @test_task.user_id)
+
+    {:ok, task} =
+      Taskman.Stores.Tasks.insert_task(@test_task, [
+        category_1.category_id,
+        category_2.category_id
+      ])
 
     verify_task_matches(task, @test_task)
     assert task.categories == [category_1, category_2]
@@ -52,4 +59,5 @@ defmodule Taskman.Test.Tasks do
     assert task.categories == [category_1, category_2]
   end
 
+  test
 end

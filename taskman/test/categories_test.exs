@@ -37,14 +37,14 @@ defmodule Taskman.Test.Categories do
 
   test "failing to get category id where category does not belong to user" do
     {:ok, cat} = Taskman.Stores.Categories.try_create_category(@category_name, @user_id)
-    {:not_found, _reason} = Taskman.Stores.Categories.get_category_id(@category_name, @user_id + 1)
+
+    {:not_found, _reason} =
+      Taskman.Stores.Categories.get_category_id(@category_name, @user_id + 1)
   end
 
   test "create task with category" do
-
   end
 
   test "get tasks with categories" do
-
   end
 end

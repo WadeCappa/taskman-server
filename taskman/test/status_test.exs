@@ -1,5 +1,4 @@
 defmodule Taskman.Test.Status do
-
   use ExUnit.Case
 
   test "verifies status translations" do
@@ -7,5 +6,4 @@ defmodule Taskman.Test.Status do
     assert Taskman.Logic.Status.to_number_from_string("completed") == {:ok, 1}
     assert Taskman.Logic.Status.to_number_from_string("triaged") == {:ok, 2}
   end
-
 end
