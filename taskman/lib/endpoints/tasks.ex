@@ -41,7 +41,7 @@ defmodule Taskman.Endpoints.Tasks do
           {:ok, category_ids} ->
             response =
               Taskman.Stores.Tasks.get_tasks(status_id, user_id, category_ids)
-              |> Taskman.Logic.Score.sort_tasks()
+              |> Taskman.Logic.Sort.sort_tasks(Taskman.Logic.Status.get_name(status_id))
               |> Poison.encode()
 
             case response do

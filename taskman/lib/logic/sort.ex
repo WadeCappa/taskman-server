@@ -1,4 +1,4 @@
-defmodule Taskman.Logic.Score do
+defmodule Taskman.Logic.Sort do
   def sort_tasks(tasks, status) do
     case status do
       :tracking -> sort_and_calculate_score(tasks)
