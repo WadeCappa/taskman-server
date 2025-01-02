@@ -57,7 +57,7 @@ defmodule Authman.Endpoint do
           )
           |> Authman.Repo.one()
 
-        if user != nil and Bcrypt.verify_pass(password, user.hash) do
+        if not is_nil(user) and Bcrypt.verify_pass(password, user.hash) do
           new_session = Authman.Session.Logic.get_session(user)
           send_resp(conn, 200, Poison.encode!(new_session))
         else

@@ -29,7 +29,7 @@ defmodule Authman.Session.Logic do
       from(s in Authman.Sessions, where: s.token == ^token)
       |> Authman.Repo.one()
 
-    if session != nil and not has_expired(session) do
+    if not is_nil(session) and not has_expired(session) do
       {:ok, session.user_id}
     else
       :expired
@@ -41,7 +41,7 @@ defmodule Authman.Session.Logic do
       from(s in Authman.Sessions, where: s.user_id == ^user.id)
       |> Authman.Repo.one()
 
-    if session != nil and not has_expired(session) do
+    if not is_nil(session) and not has_expired(session) do
       session
     else
       # Expire in 24 hours

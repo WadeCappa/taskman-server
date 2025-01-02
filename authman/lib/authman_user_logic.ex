@@ -6,7 +6,7 @@ defmodule Authman.User.Logic do
       from(u in Authman.Users, where: u.email == ^email)
       |> Authman.Repo.one()
 
-    user != nil
+    not is_nil(user)
   end
 
   def create_user(email, password) do
