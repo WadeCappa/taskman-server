@@ -6,10 +6,10 @@ defmodule Taskman.Endpoints.Tasks do
     task =
       task_id
       |> Taskman.Stores.Tasks.get_task_by_id(conn.assigns[:user_id])
-      |> Poison.encode()
 
     case task do
-      {:ok, resp} -> send_resp(conn, 200, resp)
+      {:ok, resp} -> send_resp(conn, 200, Poison.encode!(resp))
+      {:not_found, resp} -> send_resp(conn, 400, Poison.encode!(resp))
       _ -> send_resp(conn, 500, "{}")
     end
   end
@@ -66,7 +66,7 @@ defmodule Taskman.Endpoints.Tasks do
 
         {:ok, from_db} = task
           |> task_from_request(conn.assigns[:user_id])
-          |> Taskman.Stores.Tasks.insert_task(conn.assigns[:user_id], category_ids)
+          |> Taskman.Stores.Tasks.insert_task(category_ids)
 
         response = Poison.encode(from_db)
 

@@ -10,11 +10,12 @@ defmodule Taskman.Stores.Tasks do
       |> Taskman.Repo.one()
 
     if task == nil do
-      nil
+      {:not_found, %{reason: "could not find task", user_id: user_id, task_id: task_id}}
     else
-      task
-      |> Map.put(:comments, Taskman.Stores.Comments.get_comments_for_task(task.id))
-      |> Map.put(:categories, Taskman.Stores.Categories.get_categories_for_task(task.id))
+      {:ok,
+        task
+        |> Map.put(:comments, Taskman.Stores.Comments.get_comments_for_task(task.id))
+        |> Map.put(:categories, Taskman.Stores.Categories.get_categories_for_task(task.id))}
     end
   end
 
@@ -22,7 +23,10 @@ defmodule Taskman.Stores.Tasks do
   # TODO: get this to work with ecto
   # TODO: these map calls are very expensive because we're not using joins
   def get_tasks(status_id, user_id, category) do
-    category_id = Taskman.Stores.Categories.get_category_id(category, user_id)
+    category_id = case category do
+      :all -> :all
+      other -> Taskman.Stores.Categories.get_category_id(other, user_id)
+    end
 
     from(
       t in Taskman.Tasks,
@@ -35,15 +39,15 @@ defmodule Taskman.Stores.Tasks do
     |> then(fn tasks -> sort_tasks(tasks) end)
   end
 
-  defp has_category(_, :none) do
-    false
-  end
-
   defp has_category(_, :all) do
     true
   end
 
-  defp has_category(t, c_id) do
+  defp has_category(_, {:not_found, _reason}) do
+    false
+  end
+
+  defp has_category(t, {:ok, c_id}) do
     t.categories
     |> Enum.map(fn c -> c.category_id end)
     |> then(fn cat_ids -> Enum.member?(cat_ids, c_id) end)
@@ -77,35 +81,26 @@ defmodule Taskman.Stores.Tasks do
     |> Enum.reverse()
   end
 
-  def insert_task(new_task, user_id, category_ids) do
+  def insert_task(new_task, category_ids) do
     case new_task
         |> Taskman.Repo.insert(returning: true) do
-      {:ok, task} -> insert_category_relations(task, category_ids, user_id)
+      {:ok, task} -> insert_category_relations(task, category_ids)
       error -> error
     end
   end
 
-  defp insert_category_relations(task, category_ids, user_id) do
-    user_category_ids =
-      user_id
+  defp insert_category_relations(task, category_ids) do
+    target_categories =
+      task.user_id
       |> Taskman.Stores.Categories.get_categories_for_user()
-      |> Enum.map(fn c -> c.category_id end)
+      |> Enum.filter(fn c -> Enum.member?(category_ids, c.category_id) end)
 
-    inserted_relations =
-      category_ids
-      |> Enum.filter(fn c_id -> Enum.member?(user_category_ids, c_id) end)
-      |> Enum.map(fn c_id -> %Taskman.TasksToCategories{task_id: task.id, category_id: c_id} end)
+    target_categories
+      |> Enum.map(fn c -> %Taskman.TasksToCategories{task_id: task.id, category_id: c.category_id} end)
       # TODO: should do this in one insert operation, look up how to do this
-      |> Enum.map(fn x -> Taskman.Repo.insert(x, returning: true) end)
-      |> Enum.filter(fn x ->
-        case x do
-          {:ok, _} -> true
-          _error -> false
-        end
-      end)
-      |> Enum.map(fn {:ok, x} -> x end)
+      |> Enum.each(fn x -> Taskman.Repo.insert(x, returning: true) end)
 
-    {:ok, Map.put(task, :categoryRelations, inserted_relations)}
+    {:ok, Map.put(task, :categories, target_categories)}
   end
 
   def delete_task_by_id(task_id, user_id) do

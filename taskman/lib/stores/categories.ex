@@ -19,21 +19,17 @@ defmodule Taskman.Stores.Categories do
 
   def try_create_category(category_name, user_id) do
     case get_category_id(category_name, user_id) do
-      :none ->
+      {:not_found, _reason} ->
         %Taskman.Categories{
           category_name: category_name,
           user_id: user_id
         }
         |> Taskman.Repo.insert(returning: true)
 
-      _id ->
+      _ ->
         {:error,
          %{reason: "category by this name already exists", user_id: user_id, category_name: category_name}}
     end
-  end
-
-  def get_category_id(:all, _usr_id) do
-    :all
   end
 
   # TODO: Should return a unique value. This is currently
@@ -47,8 +43,8 @@ defmodule Taskman.Stores.Categories do
       |> Taskman.Repo.one()
 
     case category do
-      nil -> :none
-      cat -> cat.category_id
+      nil -> {:not_found, %{reason: "could not find a category for this name", category_name: name}}
+      cat -> {:ok, cat.category_id}
     end
   end
 
