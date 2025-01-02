@@ -8,7 +8,7 @@ defmodule Taskman.Stores.Tasks do
       from(t in Taskman.Tasks, where: t.id == ^task_id and t.user_id == ^user_id)
       |> Taskman.Repo.one()
 
-    if task == nil do
+    if is_nil(task) do
       {:not_found, %{reason: "could not find task", user_id: user_id, task_id: task_id}}
     else
       {:ok,
@@ -67,7 +67,7 @@ defmodule Taskman.Stores.Tasks do
 
     get_score = fn task ->
       time_to_deadline_cost =
-        if task.deadline == nil do
+        if is_nil(task.deadline) do
           0
         else
           task.cost / max(task.deadline - System.os_time(:second), 1)

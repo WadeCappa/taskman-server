@@ -45,12 +45,10 @@ defmodule Taskman.Stores.Categories do
       )
       |> Taskman.Repo.one()
 
-    case category do
-      nil ->
-        {:not_found, %{reason: "could not find a category for this name", category_name: name}}
-
-      cat ->
-        {:ok, cat.category_id}
+    if is_nil(category) do
+      {:not_found, %{reason: "could not find a category for this name", category_name: name}}
+    else
+      {:ok, category.category_id}
     end
   end
 end

@@ -59,5 +59,15 @@ defmodule Taskman.Test.Tasks do
     assert task.categories == [category_1, category_2]
   end
 
-  test
+  test "cannot find task when getting by id" do
+    {:not_found, _resp} = Taskman.Stores.Tasks.get_task_by_id(0, @test_task.user_id)
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+    {:ok, _resp} = Taskman.Stores.Tasks.get_task_by_id(task.id, @test_task.user_id)
+
+    # not found because user_id doesn't match
+    {:not_found, _resp} = Taskman.Stores.Tasks.get_task_by_id(task.id, @test_task.user_id + 1)
+
+    # not found because task_id doesn't match
+    {:not_found, _resp} = Taskman.Stores.Tasks.get_task_by_id(task.id + 1, @test_task.user_id)
+  end
 end
