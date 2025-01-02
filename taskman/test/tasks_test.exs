@@ -47,7 +47,12 @@ defmodule Taskman.Test.Tasks do
 
   test "store task with categories" do
     categories = Taskman.Stores.Categories.get_categories_for_user(@user_id)
-    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, Enum.map(categories, fn c -> c.category_id end))
+
+    {:ok, task} =
+      Taskman.Stores.Tasks.insert_task(
+        @test_task,
+        Enum.map(categories, fn c -> c.category_id end)
+      )
 
     verify_task_matches(task, @test_task)
     assert task.categories == categories
@@ -85,13 +90,14 @@ defmodule Taskman.Test.Tasks do
   end
 
   test "get_tasks should filter by status" do
-    statuses_to_task_ids = Taskman.Logic.Status.get_statuses()
-    |> Map.values()
-    |> Enum.map(fn s ->
-      {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
-      {1, _resp} = Taskman.Stores.Tasks.set_status(task.id, s, @user_id)
-      {s, task.id}
-    end)
+    statuses_to_task_ids =
+      Taskman.Logic.Status.get_statuses()
+      |> Map.values()
+      |> Enum.map(fn s ->
+        {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+        {1, _resp} = Taskman.Stores.Tasks.set_status(task.id, s, @user_id)
+        {s, task.id}
+      end)
 
     statuses_to_task_ids
     |> Enum.map(fn {s, t_id} ->
@@ -101,11 +107,12 @@ defmodule Taskman.Test.Tasks do
   end
 
   test "get_tasks should filter by category" do
-    category_ids_to_task_ids = Taskman.Stores.Categories.get_categories_for_user(@user_id)
-    |> Enum.map(fn c ->
-      {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [c.category_id])
-      {c.category_id, task.id}
-    end)
+    category_ids_to_task_ids =
+      Taskman.Stores.Categories.get_categories_for_user(@user_id)
+      |> Enum.map(fn c ->
+        {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [c.category_id])
+        {c.category_id, task.id}
+      end)
 
     category_ids_to_task_ids
     |> Enum.map(fn {c_id, t_id} ->

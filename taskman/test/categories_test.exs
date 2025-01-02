@@ -41,10 +41,4 @@ defmodule Taskman.Test.Categories do
     {:not_found, _reason} =
       Taskman.Stores.Categories.get_category_id(@category_name, @user_id + 1)
   end
-
-  test "create task with category" do
-  end
-
-  test "get tasks with categories" do
-  end
 end

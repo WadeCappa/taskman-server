@@ -33,6 +33,7 @@ defmodule Taskman.Endpoints.Tasks do
       {:ok, status_id} ->
         user_id = conn.assigns[:user_id]
         category_ids = category_name_to_list(category_name, user_id)
+
         response =
           Taskman.Stores.Tasks.get_tasks(status_id, user_id, category_ids)
           |> Taskman.Logic.Score.sort_tasks()

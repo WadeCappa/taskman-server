@@ -1,5 +1,4 @@
 defmodule Taskman.Logic.Score do
-
   # this is kinda slow too, lots of repeat calculations. Can probably be faster.
   #  Might be able to cache this or something too since this only changes when a
   #  new task is added, which should be relatively rare, more reads than writes.
@@ -27,5 +26,4 @@ defmodule Taskman.Logic.Score do
     |> Enum.sort(fn x, y -> x.score < y.score end)
     |> Enum.reverse()
   end
-
 end
