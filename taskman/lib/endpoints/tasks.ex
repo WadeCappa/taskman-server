@@ -93,9 +93,11 @@ defmodule Taskman.Endpoints.Tasks do
             case Taskman.Stores.Tasks.insert_task(task_from_request, category_ids) do
               {:ok, from_db} ->
                 send_resp(conn, 200, Poison.encode!(from_db))
+
               {:error, error} ->
                 send_resp(conn, 400, Poison.encode!(error))
             end
+
           {:error, error} ->
             send_resp(conn, 400, Poison.encode!(error))
         end
