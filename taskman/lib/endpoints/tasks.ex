@@ -71,10 +71,11 @@ defmodule Taskman.Endpoints.Tasks do
   defp task_from_request(request, user_id) do
     case get_required_fields(request) do
       {:ok, new_task} ->
-        new_task
-        |> Map.put(:time_posted, System.os_time(:second))
-        |> Map.put(:status, 0)
-        |> Map.put(:user_id, user_id)
+        {:ok,
+         new_task
+         |> Map.put(:time_posted, System.os_time(:second))
+         |> Map.put(:status, 0)
+         |> Map.put(:user_id, user_id)}
 
       error ->
         error
@@ -100,6 +101,10 @@ defmodule Taskman.Endpoints.Tasks do
 
           {:error, error} ->
             send_resp(conn, 400, Poison.encode!(error))
+
+          error ->
+            IO.inspect(error)
+            send_resp(conn, 500, "{}")
         end
 
       _error ->

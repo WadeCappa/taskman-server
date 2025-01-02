@@ -31,8 +31,8 @@ defmodule Taskman.Endpoints.Comments do
             send_resp(conn, 400, Poison.encode!(error))
         end
 
-      error ->
-        send_resp(conn, 500, "{}")
+      _error ->
+        send_resp(conn, 400, "{}")
     end
   end
 end
