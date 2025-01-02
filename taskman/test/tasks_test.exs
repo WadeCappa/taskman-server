@@ -1,4 +1,5 @@
 defmodule Taskman.Test.Tasks do
+  @user_id 100
   @test_task %Taskman.Tasks{
     name: "test task",
     cost: 10,
@@ -7,17 +8,23 @@ defmodule Taskman.Test.Tasks do
     time_posted: 10,
     status: 0,
     deadline: 100,
-    user_id: 100
+    user_id: @user_id
   }
   @test_category_name_1 "test_category_1"
   @test_category_name_2 "test_category_2"
 
   use ExUnit.Case
 
+  setup_all do
+    Taskman.Stores.Categories.try_create_category(@test_category_name_1, @user_id)
+    Taskman.Stores.Categories.try_create_category(@test_category_name_2, @user_id)
+    :ok
+  end
+
+  # does not delete category table since these are largely static
+  # for the purpose of this test
   setup do
     Taskman.Repo.delete_all(Taskman.Tasks)
-    Taskman.Repo.delete_all(Taskman.Comments)
-    Taskman.Repo.delete_all(Taskman.Categories)
     Taskman.Repo.delete_all(Taskman.TasksToCategories)
     :ok
   end
@@ -39,24 +46,15 @@ defmodule Taskman.Test.Tasks do
   end
 
   test "store task with categories" do
-    {:ok, category_1} =
-      Taskman.Stores.Categories.try_create_category(@test_category_name_1, @test_task.user_id)
-
-    {:ok, category_2} =
-      Taskman.Stores.Categories.try_create_category(@test_category_name_2, @test_task.user_id)
-
-    {:ok, task} =
-      Taskman.Stores.Tasks.insert_task(@test_task, [
-        category_1.category_id,
-        category_2.category_id
-      ])
+    categories = Taskman.Stores.Categories.get_categories_for_user(@user_id)
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, Enum.map(categories, fn c -> c.category_id end))
 
     verify_task_matches(task, @test_task)
-    assert task.categories == [category_1, category_2]
+    assert task.categories == categories
 
     {:ok, task} = Taskman.Stores.Tasks.get_task_by_id(task.id, task.user_id)
     verify_task_matches(task, @test_task)
-    assert task.categories == [category_1, category_2]
+    assert task.categories == categories
   end
 
   test "cannot find task when getting by id" do
@@ -69,5 +67,50 @@ defmodule Taskman.Test.Tasks do
 
     # not found because task_id doesn't match
     {:not_found, _resp} = Taskman.Stores.Tasks.get_task_by_id(task.id + 1, @test_task.user_id)
+  end
+
+  test "set task status" do
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+    {1, _resp} = Taskman.Stores.Tasks.set_status(task.id, task.status + 1, task.user_id)
+    {0, _resp} = Taskman.Stores.Tasks.set_status(task.id, task.status + 1, task.user_id + 1)
+  end
+
+  test "delete task" do
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+    {1, _resp} = Taskman.Stores.Tasks.delete_task_by_id(task.id, task.user_id)
+
+    # should not delete task because user_id, task_id combo can't find a result
+    {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+    {0, _resp} = Taskman.Stores.Tasks.delete_task_by_id(task.id, task.user_id + 1)
+  end
+
+  test "get_tasks should filter by status" do
+    statuses_to_task_ids = Taskman.Logic.Status.get_statuses()
+    |> Map.values()
+    |> Enum.map(fn s ->
+      {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
+      {1, _resp} = Taskman.Stores.Tasks.set_status(task.id, s, @user_id)
+      {s, task.id}
+    end)
+
+    statuses_to_task_ids
+    |> Enum.map(fn {s, t_id} ->
+      [task] = Taskman.Stores.Tasks.get_tasks(s, @user_id, [])
+      assert task.id == t_id
+    end)
+  end
+
+  test "get_tasks should filter by category" do
+    category_ids_to_task_ids = Taskman.Stores.Categories.get_categories_for_user(@user_id)
+    |> Enum.map(fn c ->
+      {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [c.category_id])
+      {c.category_id, task.id}
+    end)
+
+    category_ids_to_task_ids
+    |> Enum.map(fn {c_id, t_id} ->
+      [task] = Taskman.Stores.Tasks.get_tasks(0, @user_id, [c_id])
+      assert task.id == t_id
+    end)
   end
 end

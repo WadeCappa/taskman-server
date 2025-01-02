@@ -7,4 +7,4 @@ config :taskman, Taskman.Repo,
   username: "postgres",
   password: "pass",
   hostname: "localhost",
-  log_level: :info
+  log: :false

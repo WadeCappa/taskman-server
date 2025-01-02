@@ -21,13 +21,7 @@ defmodule Taskman.Stores.Tasks do
   # select * from tasks left join comments on tasks.id = comments.task_id;
   # TODO: get this to work with ecto
   # TODO: these map calls are very expensive because we're not using joins
-  def get_tasks(status_id, user_id, category) do
-    category_id =
-      case category do
-        :all -> :all
-        other -> Taskman.Stores.Categories.get_category_id(other, user_id)
-      end
-
+  def get_tasks(status_id, user_id, category_ids) do
     from(
       t in Taskman.Tasks,
       where: t.status == ^status_id and t.user_id == ^user_id
@@ -39,50 +33,17 @@ defmodule Taskman.Stores.Tasks do
     |> Enum.map(fn t ->
       Map.put(t, :categories, Taskman.Stores.Categories.get_categories_for_task(t.id))
     end)
-    |> Enum.filter(fn t -> has_category(t, category_id) end)
-    |> then(fn tasks -> sort_tasks(tasks) end)
+    |> Enum.filter(fn t -> has_category(t, category_ids) end)
   end
 
-  defp has_category(_, :all) do
+  defp has_category(_, []) do
     true
   end
 
-  defp has_category(_, {:not_found, _reason}) do
-    false
-  end
-
-  defp has_category(t, {:ok, c_id}) do
+  defp has_category(t, ids) do
     t.categories
-    |> Enum.map(fn c -> c.category_id end)
-    |> then(fn cat_ids -> Enum.member?(cat_ids, c_id) end)
-  end
-
-  # this is kinda slow too, lots of repeat calculations. Can probably be faster.
-  #  Might be able to cache this or something too since this only changes when a
-  #  new task is added, which should be relatively rare, more reads than writes.
-  defp sort_tasks(tasks) do
-    total_priority =
-      tasks
-      |> Enum.reduce(1, fn task, p -> p + task.priority end)
-
-    get_score = fn task ->
-      time_to_deadline_cost =
-        if is_nil(task.deadline) do
-          0
-        else
-          task.cost / max(task.deadline - System.os_time(:second), 1)
-        end
-
-      normalized_priority_over_cost =
-        :math.sqrt(:math.pow(task.priority, 2) / total_priority) / task.cost
-
-      time_to_deadline_cost + normalized_priority_over_cost
-    end
-
-    tasks
-    |> Enum.map(fn t -> Map.put(t, :score, get_score.(t)) end)
-    |> Enum.sort(fn x, y -> x.score < y.score end)
-    |> Enum.reverse()
+    |> Enum.filter(fn c -> Enum.member?(ids, c.category_id) end)
+    |> then(fn matches -> length(matches) > 0 end)
   end
 
   def insert_task(new_task, category_ids) do

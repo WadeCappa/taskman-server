@@ -13,14 +13,29 @@ defmodule Taskman.Endpoints.Tasks do
     end
   end
 
-  def get_tasks(conn, status, category) do
+  defp category_name_to_list(:all, _user_id) do
+    []
+  end
+
+  # TODO: we should probably return an error instead of a result
+  defp category_name_to_list(category_name, user_id) do
+    case Taskman.Stores.Categories.get_category_id(category_name, user_id) do
+      {:not_found, _resp} -> []
+      {:ok, c_id} -> [c_id]
+    end
+  end
+
+  def get_tasks(conn, status, category_name) do
     case Taskman.Logic.Status.to_number_from_string(status) do
       :error ->
         send_resp(conn, 400, "bad status, try 'tracking', 'completed', and 'triaged'")
 
       {:ok, status_id} ->
+        user_id = conn.assigns[:user_id]
+        category_ids = category_name_to_list(category_name, user_id)
         response =
-          Taskman.Stores.Tasks.get_tasks(status_id, conn.assigns[:user_id], category)
+          Taskman.Stores.Tasks.get_tasks(status_id, user_id, category_ids)
+          |> Taskman.Logic.Score.sort_tasks()
           |> Poison.encode()
 
         case response do

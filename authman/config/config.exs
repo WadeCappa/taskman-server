@@ -7,4 +7,4 @@ config :authman, Authman.Repo,
   username: "postgres",
   password: "pass",
   hostname: "db",
-  log_level: :info
+  log: :info

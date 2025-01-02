@@ -1,8 +1,9 @@
 defmodule Taskman.Logic.Status do
   @type status :: :tracking | :completed | :triaged
 
+  # visible for testing
   @spec get_statuses() :: %{status() => integer()}
-  defp get_statuses() do
+  def get_statuses() do
     %{
       tracking: 0,
       completed: 1,
