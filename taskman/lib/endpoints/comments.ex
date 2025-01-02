@@ -28,12 +28,10 @@ defmodule Taskman.Endpoints.Comments do
             end
 
           error ->
-            IO.inspect(error)
-            send_resp(conn, 400, "{}")
+            send_resp(conn, 400, Poison.encode!(error))
         end
 
       error ->
-        error |> IO.inspect()
         send_resp(conn, 500, "{}")
     end
   end

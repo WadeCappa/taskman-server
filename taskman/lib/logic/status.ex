@@ -16,7 +16,8 @@ defmodule Taskman.Logic.Status do
     if Map.has_key?(get_statuses(), String.to_atom(status)) do
       {:ok, Map.get(get_statuses(), String.to_atom(status))}
     else
-      :error
+      {:error,
+       %{reason: "bad status, try 'tracking', 'completed', and 'triaged'", status_string: status}}
     end
   end
 end

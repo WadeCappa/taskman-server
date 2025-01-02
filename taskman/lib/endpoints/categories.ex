@@ -31,8 +31,7 @@ defmodule Taskman.Endpoints.Categories do
         end
 
       error ->
-        error |> IO.inspect()
-        send_resp(conn, 400, "{}")
+        send_resp(conn, 400, Poison.encode!(error))
     end
   end
 end
