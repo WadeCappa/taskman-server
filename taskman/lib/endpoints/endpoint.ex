@@ -15,6 +15,10 @@ defmodule Taskman.Endpoint do
     Taskman.Endpoints.Categories.create_category(conn)
   end
 
+  post "add-to-category/:task_id/:category_id" do
+    Taskman.Endpoints.Categories.add_to_category(conn, task_id, category_id)
+  end
+
   post "comment/:task_id" do
     Taskman.Endpoints.Comments.create_comment(conn, task_id)
   end
