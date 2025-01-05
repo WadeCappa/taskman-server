@@ -29,7 +29,7 @@ defmodule Taskman.Auth do
           {:ok, user_id} ->
             assign(conn, :user_id, user_id)
 
-          error ->
+          _error ->
             send_resp(conn, 401, "{\"error\": {\"reason\": \"Invalid user token\"}}")
             |> halt
         end
