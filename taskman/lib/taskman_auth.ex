@@ -8,19 +8,21 @@ defmodule Taskman.Auth do
   def call(conn, _opts) do
     %{req_headers: headers} = conn
 
-    header =
+    auth_header =
       headers
+      |> IO.inspect()
       |> Enum.filter(fn {key, _value} -> key == "authorization" end)
       |> Enum.reduce({}, fn v, _acc -> v end)
+      |> IO.inspect()
 
-    if header == [] do
+    if auth_header == {} do
       send_resp(
         conn,
         401,
-        "{\"message\": \"Auth header not provided, user format 'Authorization: Bearer <token>'\"}"
+        "{\"error\": {\"reason\": \"Auth header not provided, user format 'Authorization: Bearer <token>'\"}}"
       )
     else
-      {:ok, resp} = HTTPoison.put("authman:4002/check", "", [header])
+      {:ok, resp} = HTTPoison.put("localhost:4002/check", "", [auth_header])
 
       if Integer.floor_div(Map.get(resp, :status_code, 500), 100) == 2 and
            Map.has_key?(resp, :body) do
@@ -30,11 +32,11 @@ defmodule Taskman.Auth do
 
           error ->
             IO.inspect(error)
-            send_resp(conn, 401, "{\"message\": \"Invalid user token\"}")
+            send_resp(conn, 401, "{\"error\": {\"reason\": \"Invalid user token\"}}")
         end
       else
         IO.inspect(resp)
-        send_resp(conn, 401, "{\"message\": \"Please provide an authentication header\"}")
+        send_resp(conn, 401, "{\"error\": {\"reason\": \"Please provide an authentication header\"}}")
       end
     end
   end
