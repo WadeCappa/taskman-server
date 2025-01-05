@@ -43,7 +43,7 @@ defmodule Taskman.Auth do
         send_resp(
           conn,
           401,
-          "{\"error\": {\"reason\": \"Please provide an authentication header\"}}"
+          "{\"error\": {\"reason\": \"Invalid user token\"}}"
         )
         |> halt
       end
