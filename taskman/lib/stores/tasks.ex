@@ -49,25 +49,9 @@ defmodule Taskman.Stores.Tasks do
   def insert_task(new_task, category_ids) do
     case new_task
          |> Taskman.Repo.insert(returning: true) do
-      {:ok, task} -> insert_category_relations(task, category_ids)
+      {:ok, task} -> Taskman.Stores.Categories.insert_category_relations(task, category_ids)
       error -> error
     end
-  end
-
-  defp insert_category_relations(task, category_ids) do
-    target_categories =
-      task.user_id
-      |> Taskman.Stores.Categories.get_categories_for_user()
-      |> Enum.filter(fn c -> Enum.member?(category_ids, c.category_id) end)
-
-    target_categories
-    |> Enum.map(fn c ->
-      %Taskman.TasksToCategories{task_id: task.id, category_id: c.category_id}
-    end)
-    # TODO: should do this in one insert operation, look up how to do this
-    |> Enum.each(fn x -> Taskman.Repo.insert(x, returning: true) end)
-
-    {:ok, Map.put(task, :categories, target_categories)}
   end
 
   def delete_task_by_id(task_id, user_id) do

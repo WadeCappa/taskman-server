@@ -51,4 +51,20 @@ defmodule Taskman.Stores.Categories do
       {:ok, category.category_id}
     end
   end
+
+  def insert_category_relations(task, category_ids) do
+    target_categories =
+      task.user_id
+      |> get_categories_for_user()
+      |> Enum.filter(fn c -> Enum.member?(category_ids, c.category_id) end)
+
+    target_categories
+    |> Enum.map(fn c ->
+      %Taskman.TasksToCategories{task_id: task.id, category_id: c.category_id}
+    end)
+    # TODO: should do this in one insert operation, look up how to do this
+    |> Enum.each(fn x -> Taskman.Repo.insert(x, returning: true) end)
+
+    {:ok, Map.put(task, :categories, target_categories)}
+  end
 end
