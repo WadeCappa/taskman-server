@@ -23,7 +23,7 @@ defmodule Taskman.Auth do
       )
       |> halt
     else
-      {:ok, resp} = HTTPoison.put("localhost:4002/check", "", [auth_header])
+      {:ok, resp} = HTTPoison.put("authman:4002/check", "", [auth_header])
 
       if Integer.floor_div(Map.get(resp, :status_code, 500), 100) == 2 and
            Map.has_key?(resp, :body) do
