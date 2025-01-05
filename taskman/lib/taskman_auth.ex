@@ -10,10 +10,8 @@ defmodule Taskman.Auth do
 
     auth_header =
       headers
-      |> IO.inspect()
       |> Enum.filter(fn {key, _value} -> key == "authorization" end)
       |> Enum.reduce({}, fn v, _acc -> v end)
-      |> IO.inspect()
 
     if auth_header == {} do
       send_resp(
