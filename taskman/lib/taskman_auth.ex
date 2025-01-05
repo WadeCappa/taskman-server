@@ -30,14 +30,10 @@ defmodule Taskman.Auth do
             assign(conn, :user_id, user_id)
 
           error ->
-            IO.inspect(error)
-
             send_resp(conn, 401, "{\"error\": {\"reason\": \"Invalid user token\"}}")
             |> halt
         end
       else
-        IO.inspect(resp)
-
         send_resp(
           conn,
           401,
@@ -49,17 +45,18 @@ defmodule Taskman.Auth do
   end
 
   defp parse_auth_response(body) do
+    # TODO: should not decode into atoms here, technically a memory leak
     case Poison.decode(body, %{keys: :atoms}) do
       {:ok, resp} ->
         if Map.has_key?(resp, :user_id) do
           {:ok, Map.get(resp, :user_id)}
         else
           resp |> IO.inspect()
-          {:error, "no user id in response"}
+          {:error, %{reason: "no user id in response", response: resp}}
         end
 
       error ->
-        IO.inspect(error)
+        error
     end
   end
 end
