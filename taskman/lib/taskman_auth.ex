@@ -21,6 +21,7 @@ defmodule Taskman.Auth do
         401,
         "{\"error\": {\"reason\": \"Auth header not provided, user format 'Authorization: Bearer <token>'\"}}"
       )
+      |> halt
     else
       {:ok, resp} = HTTPoison.put("localhost:4002/check", "", [auth_header])
 
@@ -32,11 +33,19 @@ defmodule Taskman.Auth do
 
           error ->
             IO.inspect(error)
+
             send_resp(conn, 401, "{\"error\": {\"reason\": \"Invalid user token\"}}")
+            |> halt
         end
       else
         IO.inspect(resp)
-        send_resp(conn, 401, "{\"error\": {\"reason\": \"Please provide an authentication header\"}}")
+
+        send_resp(
+          conn,
+          401,
+          "{\"error\": {\"reason\": \"Please provide an authentication header\"}}"
+        )
+        |> halt
       end
     end
   end
