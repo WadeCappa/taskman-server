@@ -20,3 +20,4 @@
 - [ ] add dependency tracking
 - [ ] write tests
 - [ ] build cli for frontend
+- [ ] setup zero downtime deployments
