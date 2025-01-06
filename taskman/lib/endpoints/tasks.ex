@@ -8,7 +8,7 @@ defmodule Taskman.Endpoints.Tasks do
 
     case task do
       {:ok, resp} -> send_resp(conn, 200, Poison.encode!(resp))
-      {:not_found, resp} -> send_resp(conn, 400, Poison.encode!(resp))
+      {:not_found, resp} -> send_resp(conn, 400, Poison.encode!(%{error: resp}))
       _ -> send_resp(conn, 500, "{}")
     end
   end
@@ -32,7 +32,7 @@ defmodule Taskman.Endpoints.Tasks do
   def get_tasks(conn, status, category_name) do
     case Taskman.Logic.Status.to_number_from_string(status) do
       {:error, error} ->
-        send_resp(conn, 400, Poison.encode!(error))
+        send_resp(conn, 400, Poison.encode!(%{error: error}))
 
       {:ok, status_id} ->
         user_id = conn.assigns[:user_id]
@@ -50,7 +50,7 @@ defmodule Taskman.Endpoints.Tasks do
             end
 
           {:error, error} ->
-            send_resp(conn, 400, Poison.encode!(error))
+            send_resp(conn, 400, Poison.encode!(%{error: error}))
         end
     end
   end
@@ -96,19 +96,20 @@ defmodule Taskman.Endpoints.Tasks do
                 send_resp(conn, 200, Poison.encode!(from_db))
 
               {:error, error} ->
-                send_resp(conn, 400, Poison.encode!(error))
+                send_resp(conn, 400, Poison.encode!(%{error: error}))
             end
 
           {:error, error} ->
-            send_resp(conn, 400, Poison.encode!(error))
+            send_resp(conn, 400, Poison.encode!(%{error: error}))
 
           error ->
             IO.inspect(error)
             send_resp(conn, 500, "{}")
         end
 
-      _error ->
-        send_resp(conn, 400, Poison.encode!({:error, %{reason: "invalid input"}}))
+      error ->
+        IO.inspect(error)
+        send_resp(conn, 400, Poison.encode!(Taskman.Logic.Errors.get_invalid_input_error()))
     end
   end
 
@@ -120,7 +121,7 @@ defmodule Taskman.Endpoints.Tasks do
   def set_status(conn, task_id, status) do
     case Taskman.Logic.Status.to_number_from_string(status) do
       {:error, error} ->
-        send_resp(conn, 400, Poison.encode!(error))
+        send_resp(conn, 400, Poison.encode!(%{error: error}))
 
       {:ok, status_id} ->
         Taskman.Stores.Tasks.set_status(task_id, status_id, conn.assigns[:user_id])

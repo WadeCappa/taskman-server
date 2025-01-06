@@ -1,14 +1,13 @@
 # todo v0
 - [x] sort by cost/priority, same algo as taskman-cli
-- [x] build cli for frontend?
 - [x] make sure auth tokens expire
 - [x] setup reverse proxy 
 - [x] add describe
 - [x] get rid of debug logs
 - [x] refactor logic for updating stuff into different endpoint plugs
 - [x] track when a task is completed, for record keeping
-- [ ] performance optimizations
 - [ ] validate security, check for sql injection and such
+- [ ] performance optimizations
 - [ ] cache auth in taskman
 - [ ] validate email addresses on account creation
 - [ ] show top n on show
@@ -20,3 +19,4 @@
 - [ ] metrics and telemetry
 - [ ] add dependency tracking
 - [ ] write tests
+- [ ] build cli for frontend

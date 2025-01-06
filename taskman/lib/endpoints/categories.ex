@@ -30,8 +30,12 @@ defmodule Taskman.Endpoints.Categories do
           _ -> send_resp(conn, 500, "{}")
         end
 
+      {:error, reason} ->
+        send_resp(conn, 400, Poison.encode!(%{error: reason}))
+
       error ->
-        send_resp(conn, 400, Poison.encode!(error))
+        IO.inspect(error)
+        send_resp(conn, 400, Poison.encode!(Taskman.Logic.Errors.get_invalid_input_error()))
     end
   end
 end
