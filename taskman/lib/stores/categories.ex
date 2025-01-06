@@ -1,14 +1,27 @@
 defmodule Taskman.Stores.Categories do
   import Ecto.Query
 
-  def get_categories_for_task(task_id) do
-    from(
-      c in Taskman.Categories,
-      join: t in Taskman.TasksToCategories,
-      on: t.category_id == c.category_id,
-      where: t.task_id == ^task_id
-    )
-    |> Taskman.Repo.all()
+  def get_categories_for_tasks(tasks, user_id) do
+    task_ids = Enum.map(tasks, fn t -> t.id end)
+
+    user_categories =
+      user_id
+      |> get_categories_for_user()
+      |> Enum.reduce(%{}, fn c, acc -> Map.put(acc, c.category_id, c) end)
+
+    relationships =
+      from(t in Taskman.TasksToCategories, where: t.task_id in ^task_ids)
+      |> Taskman.Repo.all()
+
+    tasks
+    |> Enum.map(fn t ->
+      relationships_for_task =
+        relationships
+        |> Enum.filter(fn r -> r.task_id == t.id end)
+        |> Enum.map(fn r -> Map.get(user_categories, r.category_id) end)
+
+      Map.put(t, :categories, relationships_for_task)
+    end)
   end
 
   def get_categories_for_user(user_id) do

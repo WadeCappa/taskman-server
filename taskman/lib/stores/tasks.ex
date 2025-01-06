@@ -11,10 +11,12 @@ defmodule Taskman.Stores.Tasks do
     if is_nil(task) do
       {:not_found, %{reason: "could not find task", user_id: user_id, task_id: task_id}}
     else
-      {:ok,
-       task
-       |> Map.put(:comments, Taskman.Stores.Comments.get_comments_for_task(task.id))
-       |> Map.put(:categories, Taskman.Stores.Categories.get_categories_for_task(task.id))}
+      [task_with_comments] = Taskman.Stores.Comments.get_comments_for_tasks([task])
+
+      [task_with_categories] =
+        Taskman.Stores.Categories.get_categories_for_tasks([task_with_comments], user_id)
+
+      {:ok, task_with_categories}
     end
   end
 
@@ -27,13 +29,9 @@ defmodule Taskman.Stores.Tasks do
       where: t.status == ^status_id and t.user_id == ^user_id
     )
     |> Taskman.Repo.all()
-    |> Enum.map(fn t ->
-      Map.put(t, :comments, Taskman.Stores.Comments.get_comments_for_task(t.id))
-    end)
-    |> Enum.map(fn t ->
-      Map.put(t, :categories, Taskman.Stores.Categories.get_categories_for_task(t.id))
-    end)
+    |> Taskman.Stores.Categories.get_categories_for_tasks(user_id)
     |> Enum.filter(fn t -> has_category(t, category_ids) end)
+    |> Taskman.Stores.Comments.get_comments_for_tasks()
   end
 
   defp has_category(_, []) do
