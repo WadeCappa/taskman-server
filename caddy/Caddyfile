@@ -1,3 +1,12 @@
+
+{
+	servers {
+		metrics
+	}
+	admin :2019
+}
+
+
 api.cantseewater.online {
 	reverse_proxy taskman:4001
 }
