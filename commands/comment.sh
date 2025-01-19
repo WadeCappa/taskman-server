@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source /etc/opt/taskman/config
+source $HOME/.taskman/config
 
 echo "comment"
 read comment

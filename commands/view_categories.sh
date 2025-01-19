@@ -1,4 +1,4 @@
 #!/bin/sh
 
-source /etc/opt/taskman/config
+source $HOME/.taskman/config
 curl -X 'GET' "$TASKURL/category" -H "Authorization: Bearer $TOKEN"
