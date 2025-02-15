@@ -24,9 +24,26 @@ defmodule Taskman.Stores.Categories do
     end)
   end
 
+  # select categories.category_id, categories.category_name, count(distinct relationship_id) as count
+  # from categories left join tasks_to_categories on tasks_to_categories.category_id = categories.category_id
+  # group by categories.category_id;
   def get_categories_for_user(user_id) do
-    from(c in Taskman.Categories, where: c.user_id == ^user_id)
-    |> Taskman.Repo.all()
+    query =
+      from(c in Taskman.Categories,
+        left_join: m in Taskman.TasksToCategories,
+        on: c.category_id == m.category_id,
+        where: c.user_id == ^user_id,
+        group_by: :category_id,
+        select: %{
+          category_id: c.category_id,
+          category_name: c.category_name,
+          count: count(m.relationship_id)
+        }
+      )
+
+    # query = from c in Taskman.Categories, where: c.user_id == ^user_id
+
+    Taskman.Repo.all(query)
   end
 
   def try_create_category(category_name, user_id) do

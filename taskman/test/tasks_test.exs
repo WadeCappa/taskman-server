@@ -38,6 +38,11 @@ defmodule Taskman.Test.Tasks do
     assert a.user_id == b.user_id
   end
 
+  defp verify_categories_match(a, b) do
+    assert Enum.map(a, fn c -> c.category_id end) == Enum.map(b, fn c -> c.category_id end)
+    assert Enum.map(a, fn c -> c.category_name end) == Enum.map(b, fn c -> c.category_name end)
+  end
+
   test "store task without categories" do
     {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
     verify_task_matches(task, @test_task)
@@ -53,11 +58,11 @@ defmodule Taskman.Test.Tasks do
       )
 
     verify_task_matches(task, @test_task)
-    assert task.categories == categories
+    verify_categories_match(task.categories, categories)
 
     {:ok, task} = Taskman.Stores.Tasks.get_task_by_id(task.id, task.user_id)
     verify_task_matches(task, @test_task)
-    assert task.categories == categories
+    verify_categories_match(task.categories, categories)
   end
 
   test "cannot find task when getting by id" do
