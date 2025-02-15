@@ -38,6 +38,11 @@ defmodule Taskman.Test.Tasks do
     assert a.user_id == b.user_id
   end
 
+  defp verify_categories_match(a, b) do
+    assert Enum.map(a, fn c -> c.category_id end) == Enum.map(b, fn c -> c.category_id end)
+    assert Enum.map(a, fn c -> c.category_name end) == Enum.map(b, fn c -> c.category_name end)
+  end
+
   test "store task without categories" do
     {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [])
     verify_task_matches(task, @test_task)
@@ -53,11 +58,11 @@ defmodule Taskman.Test.Tasks do
       )
 
     verify_task_matches(task, @test_task)
-    assert task.categories == categories
+    verify_categories_match(task.categories, categories)
 
     {:ok, task} = Taskman.Stores.Tasks.get_task_by_id(task.id, task.user_id)
     verify_task_matches(task, @test_task)
-    assert task.categories == categories
+    verify_categories_match(task.categories, categories)
   end
 
   test "cannot find task when getting by id" do
@@ -129,5 +134,38 @@ defmodule Taskman.Test.Tasks do
       [task] = Taskman.Stores.Tasks.get_tasks(0, @user_id, [c_id])
       assert task.id == t_id
     end)
+  end
+
+  defp get_status_id(status_string) do
+    {:ok, status_id} = Taskman.Logic.Status.to_number_from_string(status_string)
+    status_id
+  end
+
+  test "we can view categories by status and get a count of how many tasks for each category are part of each status" do
+    # View categories with 'tracking', each category should return 0 for count
+    categories =
+      Taskman.Stores.Categories.get_categories_for_user(@user_id, get_status_id("tracking"))
+
+    assert Enum.count(categories) > 0
+    assert Enum.reduce(categories, 0, fn c, acc -> c.count + acc end) == 0
+
+    category_ids_to_task_ids =
+      Taskman.Stores.Categories.get_categories_for_user(@user_id)
+      |> Enum.map(fn c ->
+        {:ok, task} = Taskman.Stores.Tasks.insert_task(@test_task, [c.category_id])
+        {c.category_id, task.id}
+      end)
+
+    # View categories with 'tracking', should have one task per category after insert
+    categories =
+      Taskman.Stores.Categories.get_categories_for_user(@user_id, get_status_id("tracking"))
+
+    Enum.each(categories, fn c -> assert c.count == 1 end)
+
+    # we can't completed any tasks, expect zero here
+    categories =
+      Taskman.Stores.Categories.get_categories_for_user(@user_id, get_status_id("completed"))
+
+    assert Enum.reduce(categories, 0, fn c, acc -> c.count + acc end) == 0
   end
 end

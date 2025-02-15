@@ -1,16 +1,29 @@
 defmodule Taskman.Endpoints.Categories do
   import Plug.Conn
 
-  def get_category(conn) do
-    categories =
-      conn.assigns[:user_id]
-      |> Taskman.Stores.Categories.get_categories_for_user()
-      |> Poison.encode()
-
-    case categories do
+  defp send_categories(categories, conn) do
+    case Poison.encode(categories) do
       {:ok, resp} -> send_resp(conn, 200, resp)
       _ -> send_resp(conn, 500, "{}")
     end
+  end
+
+  def get_categories(conn, status_string) do
+    case Taskman.Logic.Status.to_number_from_string(status_string) do
+      {:ok, status_id} ->
+        conn.assigns[:user_id]
+        |> Taskman.Stores.Categories.get_categories_for_user(status_id)
+        |> send_categories(conn)
+
+      error ->
+        send_resp(conn, 500, Poison.encode!(error))
+    end
+  end
+
+  def get_categories(conn) do
+    conn.assigns[:user_id]
+    |> Taskman.Stores.Categories.get_categories_for_user()
+    |> send_categories(conn)
   end
 
   def create_category(conn) do

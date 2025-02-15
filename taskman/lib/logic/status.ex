@@ -17,11 +17,16 @@ defmodule Taskman.Logic.Status do
 
   @spec to_number_from_string(String.t()) :: integer()
   def to_number_from_string(status) do
+    # TODO: Technically using string.to_atom here is a memory leak since the erlang vm doesn't clean up atoms
     if Map.has_key?(get_statuses(), String.to_atom(status)) do
       {:ok, Map.get(get_statuses(), String.to_atom(status))}
     else
-      {:error,
-       %{reason: "bad status, try 'tracking', 'completed', and 'triaged'", status_string: status}}
+      %{
+        error: %{
+          reason: "bad status, try 'tracking', 'completed', and 'triaged'",
+          status_string: status
+        }
+      }
     end
   end
 
