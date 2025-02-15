@@ -41,4 +41,14 @@ defmodule Taskman.Test.Categories do
     {:not_found, _reason} =
       Taskman.Stores.Categories.get_category_id(@category_name, @user_id + 1)
   end
+
+  test "get all categories" do
+    {:ok, cat} = Taskman.Stores.Categories.try_create_category(@category_name, @user_id)
+    categories = Taskman.Stores.Categories.get_categories_for_user(@user_id, 0)
+
+    assert Enum.any?(categories, fn c -> c.category_name == cat.category_name end)
+
+    # should have zero relations
+    assert Enum.any?(categories, fn c -> c.count == 0 end)
+  end
 end

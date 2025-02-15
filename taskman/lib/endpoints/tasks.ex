@@ -31,9 +31,6 @@ defmodule Taskman.Endpoints.Tasks do
 
   def get_tasks(conn, status, category_name) do
     case Taskman.Logic.Status.to_number_from_string(status) do
-      {:error, error} ->
-        send_resp(conn, 400, Poison.encode!(%{error: error}))
-
       {:ok, status_id} ->
         user_id = conn.assigns[:user_id]
 
@@ -52,6 +49,9 @@ defmodule Taskman.Endpoints.Tasks do
           {:error, error} ->
             send_resp(conn, 400, Poison.encode!(%{error: error}))
         end
+
+      error ->
+        send_resp(conn, 400, Poison.encode!(error))
     end
   end
 
@@ -120,12 +120,12 @@ defmodule Taskman.Endpoints.Tasks do
 
   def set_status(conn, task_id, status) do
     case Taskman.Logic.Status.to_number_from_string(status) do
-      {:error, error} ->
-        send_resp(conn, 400, Poison.encode!(%{error: error}))
-
       {:ok, status_id} ->
         Taskman.Stores.Tasks.set_status(task_id, status_id, conn.assigns[:user_id])
         send_resp(conn, 200, "{}")
+
+      error ->
+        send_resp(conn, 400, Poison.encode!(error))
     end
   end
 end

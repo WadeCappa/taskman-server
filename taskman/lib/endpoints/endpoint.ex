@@ -7,8 +7,12 @@ defmodule Taskman.Endpoint do
   plug(Taskman.Auth)
   plug(:dispatch)
 
-  get "category" do
-    Taskman.Endpoints.Categories.get_category(conn)
+  get "category/" do
+    Taskman.Endpoints.Categories.get_categories(conn)
+  end
+
+  get "category/:status" do
+    Taskman.Endpoints.Categories.get_categories(conn, status)
   end
 
   post "category" do
