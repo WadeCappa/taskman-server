@@ -9,6 +9,8 @@ RUN mix do deps.get, deps.compile
 
 COPY . .
 
+EXPOSE 4002/tcp
+
 CMD mix ecto.create \
     && mix ecto.migrate \
     && mix run --no-halt
