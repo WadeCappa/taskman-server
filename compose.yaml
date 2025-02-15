@@ -3,7 +3,7 @@ services:
     build:
       context: taskman
     ports:
-      - "4001:4001"
+      - "4000-4001:4001"
     depends_on:
       db:
         condition: service_healthy  
