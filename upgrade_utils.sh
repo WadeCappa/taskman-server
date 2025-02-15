@@ -8,6 +8,7 @@ scale_to() {
     SERVICE_NAME=$1
     SCALE_TO_COUNT=$2
     docker compose up -d --no-deps --scale $SERVICE_NAME=$SCALE_TO_COUNT --no-recreate $SERVICE_NAME
+    echo "$(get_time) scaled $SERVICE_NAME to $SCALE_TO_COUNT containers"
 }
 
 upgrade_service() {
@@ -26,7 +27,6 @@ upgrade_service() {
     echo "$(get_time) tracking old container of id $OLD_CONTAINER"
 
     scale_to $COMPOSE_FILE_NAME 2
-    echo "$(get_time) scaled up containers"
 
     sleep 60
 
@@ -35,7 +35,6 @@ upgrade_service() {
     echo "$(get_time) stopped old container of id $OLD_CONTAINER"
 
     scale_to $COMPOSE_FILE_NAME 1
-    echo "$(get_time) scaled back down to one container"
 
     echo "$(get_time) $COMPOSE_FILE_NAME version $VERSION has been deployed"
 }
