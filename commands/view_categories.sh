@@ -11,6 +11,5 @@ if [ $STATUS_CODE != 200 ] ; then
     echo "status code of $STATUS_CODE"
     echo "$CONTENT" | jq
 else
-    echo "[category id, category name, count]"
-    echo "$CONTENT" | jq -c '.[] | [.category_id, .category_name, .count]'
+    echo "$CONTENT" | jq -c '.[] | {c_id:.category_id, c_name:.category_name, count:.count}'
 fi
