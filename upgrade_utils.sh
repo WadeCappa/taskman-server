@@ -11,6 +11,28 @@ scale_to() {
     echo "$(get_time) scaled $SERVICE_NAME to $SCALE_TO_COUNT containers"
 }
 
+wait_for_upgrade() {
+    HEALTH_CHECK_FUNC=$1
+    for i in $(seq 1 10);
+    do
+        if $HEALTH_CHECK_FUNC; then 
+            echo "$(get_time) healthcheck succeeded on attempt $i"
+            return 0
+        else
+            echo "$(get_time) healthcheck failed attempt $i"
+            sleep 3
+        fi
+    done
+    return 1
+}
+
+kill_container() {
+    C=$1
+    docker stop $C
+    docker container rm -f $C
+    echo "$(get_time) stopped container of id $C"
+}
+
 upgrade_service() {
     COMPOSE_FILE_NAME=$1
     DOCKER_NAME=$2
@@ -30,21 +52,18 @@ upgrade_service() {
 
     scale_to $COMPOSE_FILE_NAME 2
 
-    for i in $(seq 1 10); 
-    do
-        if [ $HEALTH_CHECK_FUNC ]; then 
-            echo "$(get_time) healthcheck succeeded on attempt $i"
-            break
-        else
-            echo "$(get_time) healthcheck failed attempt $i"
-            sleep 3
-        fi
-    done
+    if ! wait_for_upgrade $HEALTH_CHECK_FUNC; then 
+        echo "$(get_time) failed upgrade, rolling back"
+        for C in $(docker ps -aqf "name=$DOCKER_NAME")
+        do
+            if [ "$C" != $OLD_CONTAINER ]; then 
+                kill_container $C
+            fi
+        done
+        return 1
+    fi
 
-    docker stop $OLD_CONTAINER
-    docker container rm -f $OLD_CONTAINER
-    echo "$(get_time) stopped old container of id $OLD_CONTAINER"
-
+    kill_container $OLD_CONTAINER
     scale_to $COMPOSE_FILE_NAME 1
 
     echo "$(get_time) $COMPOSE_FILE_NAME version $VERSION has been deployed"
