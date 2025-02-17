@@ -1,10 +1,9 @@
 defmodule Taskman.Endpoint do
   import Plug.Conn
-
   use Plug.Router
 
-  plug(:match)
   plug(Taskman.Auth)
+  plug(:match)
   plug(:dispatch)
 
   get "category/" do

@@ -14,6 +14,8 @@ scale_to() {
 upgrade_service() {
     COMPOSE_FILE_NAME=$1
     DOCKER_NAME=$2
+    # this should return true if the service is up, false otherwise
+    HEALTH_CHECK_FUNC=$3
 
     git pull
 
@@ -28,7 +30,16 @@ upgrade_service() {
 
     scale_to $COMPOSE_FILE_NAME 2
 
-    sleep 60
+    for i in $(seq 1 10); 
+    do
+        if [ $HEALTH_CHECK_FUNC ]; then 
+            echo "$(get_time) healthcheck succeeded on attempt $i"
+            break
+        else
+            echo "$(get_time) healthcheck failed attempt $i"
+            sleep 3
+        fi
+    done
 
     docker stop $OLD_CONTAINER
     docker container rm -f $OLD_CONTAINER
