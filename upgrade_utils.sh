@@ -109,6 +109,7 @@ upgrade_service() {
 
     for OLD_CONTAINER in "${OLD_CONTAINERS[@]}"
     do
+        docker stop $C
         docker container rm -f $OLD_CONTAINER
     done
     scale_to $COMPOSE_FILE_NAME $DESIRED_CONTAINERS
