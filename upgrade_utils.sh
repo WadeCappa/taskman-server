@@ -71,14 +71,16 @@ upgrade_service() {
     OLD_CONTAINERS=($(get_running_containers $DOCKER_NAME))
     echo $OLD_CONTAINERS
     DESIRED_CONTAINERS=${#OLD_CONTAINERS[@]}
-    SCALE_CONTAINER_NUMBER=$(($DESIRED_CONTAINERS + 1))
-    echo "scaling to $SCALE_CONTAINER_NUMBER from $DESIRED_CONTAINERS"
+    SCALE_CONTAINER_NUMBER=$DESIRED_CONTAINERS
 
     UPGRADED_CONTAINERS=()
 
     for OLD_CONTAINER in "${OLD_CONTAINERS[@]}"
     do
         echo "$(get_time) tracking old container of id $OLD_CONTAINER"
+
+        # increment total number of containers 
+        SCALE_CONTAINER_NUMBER=$(($SCALE_CONTAINER_NUMBER + 1))
 
         PREVIOUS_CONTAINERS=($(get_running_containers $DOCKER_NAME))
         scale_to $COMPOSE_FILE_NAME $SCALE_CONTAINER_NUMBER
@@ -96,18 +98,12 @@ upgrade_service() {
             for C in "${UPGRADED_CONTAINERS[@]}"
             do
                 docker stop $C
-                docker rm $C
+                docker container rm -f $OLD_CONTAINER
             done
+            scale_to $COMPOSE_FILE_NAME $DESIRED_CONTAINERS
             return 1
         fi
 
-        echo "$(get_time) stopping $OLD_CONTAINER after completing blue-green"
-
-        docker stop $OLD_CONTAINER
-        docker container rm -f $OLD_CONTAINER
-        scale_to $COMPOSE_FILE_NAME $DESIRED_CONTAINERS
-
-        echo "$(get_time) scaled back to $DESIRED_CONTAINERS containers"
         UPGRADED_CONTAINERS+=($NEW_CONTAINER)
     done
 
@@ -115,6 +111,7 @@ upgrade_service() {
     do
         docker container rm -f $OLD_CONTAINER
     done
+    scale_to $COMPOSE_FILE_NAME $DESIRED_CONTAINERS
 
     echo "$(get_time) $COMPOSE_FILE_NAME version $VERSION has been deployed"
     return 0
