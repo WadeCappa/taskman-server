@@ -65,7 +65,7 @@ upgrade_service() {
     VERSION=$(git rev-parse HEAD)
     echo "$(get_time) deploying $COMPOSE_FILE_NAME version $VERSION"
 
-    # docker compose build
+    docker compose build
     echo "$(get_time) built version $VERSION"
 
     OLD_CONTAINERS=($(get_running_containers $DOCKER_NAME))
