@@ -7,7 +7,7 @@
 - [x] refactor logic for updating stuff into different endpoint plugs
 - [x] track when a task is completed, for record keeping
 - [x] validate security, check for sql injection and such
-- [ ] performance optimizations
+- [x] performance optimizations
 - [ ] validate email addresses on account creation
 - [ ] show top n on show
 
@@ -15,10 +15,10 @@
 - [x] add notes for each task
 - [x] add categories
 - [x] general refactor for code quality
-- [ ] backup to file
+- [x] backup to file
+- [x] metrics and telemetry
+- [x] write tests
+- [x] setup zero downtime deployments
 - [ ] cache auth in taskman
-- [ ] metrics and telemetry
 - [ ] add dependency tracking
-- [ ] write tests
 - [ ] build cli for frontend
-- [ ] setup zero downtime deployments
