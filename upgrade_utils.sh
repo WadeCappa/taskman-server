@@ -20,7 +20,7 @@ wait_for_upgrade() {
             return 0
         else
             echo "$(get_time) healthcheck failed attempt $i"
-            sleep 3
+            sleep 10
         fi
     done
     return 1
