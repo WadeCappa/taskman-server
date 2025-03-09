@@ -1,12 +1,30 @@
 services:
   taskman:
-    env_file: taskman.env
     build:
       context: taskman
+    depends_on:
+      db:
+        condition: service_healthy  
   authman:
-    env_file: taskman.env
     build:
       context: authman 
+    depends_on:
+      db:
+        condition: service_healthy  
+  db:
+    image: postgres:latest
+    restart: always
+    user: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    environment:
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=postgres
+    volumes: 
+      - postgres:/var/lib/postgresql/data
   caddy:
     image: caddy:2.8.4-alpine
     restart: unless-stopped
@@ -33,4 +51,5 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  postgres:
   prometheus_data: 
