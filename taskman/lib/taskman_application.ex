@@ -3,7 +3,7 @@ defmodule Taskman.Application do
     children = [
       Taskman.Repo,
       {Plug.Cowboy, scheme: :http, plug: Taskman.Endpoint, options: [port: 4001]},
-      {Plug.Cowboy, scheme: :http, plug: HealthCheck, options: [port: 5501]}
+      {Plug.Cowboy, scheme: :http, plug: Taskman.HealthCheck, options: [port: 5501]}
     ]
 
     opts = [strategy: :one_for_one, name: Taskman.Supervisor]

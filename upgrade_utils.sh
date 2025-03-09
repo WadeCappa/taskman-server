@@ -4,6 +4,24 @@ get_time() {
 	date --utc +"%A %D %T"
 }
 
+service_ready() {
+    CONTAINER=$1
+
+    SUCCESS_COND="success"
+    FAILURE_COND="failure"
+
+    echo "looking at $CONTAINER"
+    STATUS=$((docker exec $CONTAINER bash healthcheck.sh && echo $SUCCESS_COND) || echo $FAILURE_COND)
+    echo "container $CONTAINER has status of $STATUS"
+    if [ "$STATUS" != $SUCCESS_COND ]; then 
+        echo "failed check for $CONTAINER"
+        return 1
+    fi
+
+    echo "all checks passing for container $CONTAINER"
+    return 0
+}
+
 scale_to() {
     SERVICE_NAME=$1
     SCALE_TO_COUNT=$2
@@ -11,11 +29,10 @@ scale_to() {
 }
 
 wait_for_upgrade() {
-    HEALTH_CHECK_FUNC=$1
-    NEW_CONTAINER=$2
+    NEW_CONTAINER=$1
     for i in $(seq 1 10);
     do
-        if $HEALTH_CHECK_FUNC $NEW_CONTAINER; then 
+        if service_ready $NEW_CONTAINER; then 
             echo "$(get_time) healthcheck succeeded on attempt $i"
             return 0
         else
@@ -57,8 +74,6 @@ get_new_container() {
 upgrade_service() {
     COMPOSE_FILE_NAME=$1
     DOCKER_NAME=$2
-    # this should return true if the service is up, false otherwise
-    HEALTH_CHECK_FUNC=$3
 
     git pull
 
@@ -89,7 +104,7 @@ upgrade_service() {
         NEW_CONTAINER=$(get_new_container $PREVIOUS_CONTAINERS, $NEW_CONTAINERS)
         echo "$(get_time) scaled up to ${#NEW_CONTAINERS[@]} containers with new container of $NEW_CONTAINER"
 
-        if ! wait_for_upgrade $HEALTH_CHECK_FUNC $NEW_CONTAINER; then 
+        if ! wait_for_upgrade $NEW_CONTAINER; then 
             echo "$(get_time) failed upgrade, rolling back"
             for C in "${OLD_CONTAINERS[@]}"
             do

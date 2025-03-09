@@ -1,4 +1,4 @@
-defmodule Taskman.HealthCheck do
+defmodule Authman.HealthCheck do
   import Plug.Conn
   use Plug.Router
 
